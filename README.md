@@ -14,6 +14,7 @@ Core delivery platform Node.js Frontend Template.
   - [Setup](#setup)
   - [Development](#development)
   - [Production](#production)
+  - [Guidance API mock data](#guidance-api-mock-data)
   - [Npm scripts](#npm-scripts)
   - [Update dependencies](#update-dependencies)
   - [Formatting](#formatting)
@@ -104,7 +105,7 @@ npm run git:hooks
 To run the application in `development` mode run:
 
 ```bash
-npm run dev
+npm run start:dev
 ```
 
 ### Production

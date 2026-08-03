@@ -5,20 +5,19 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     clearMocks: true,
+    setupFiles: ['./vitest.setup.js'],
     coverage: {
-      provider: 'v8',
-      reportsDirectory: './coverage',
-      reporter: ['text', 'lcov'],
+      ...configDefaults.coverage,
+      reportOnFailure: true,
+      clean: false,
+      reportsDirectory: 'coverage',
+      reporter: ['lcov'],
       include: ['src/**/*.js'],
       exclude: [
-        ...configDefaults.exclude,
-        '.public',
-        'coverage',
-        'postcss.config.js',
-        'stylelint.config.js',
-        'vitest.config.js',
-        '.sonarlint',
-        'babel.config.cjs'
+        '**/node_modules/**',
+        '**/tests/**',
+        '.server',
+        'src/index.js'
       ]
     }
   }

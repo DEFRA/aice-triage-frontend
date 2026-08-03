@@ -1,0 +1,35 @@
+@use '../variables/colours' as *;
+
+// ===== Channel key =====
+// Description-list key that explains what each registry channel means.
+// Mirrors the app-radar-key pattern from DEFRA/service-manual-ui.
+
+.defra-channel-key {
+  margin: 0 0 24px;
+  padding: 0;
+  border-top: 1px solid $govuk-mid-grey;
+}
+
+.defra-channel-key__row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid $govuk-mid-grey;
+
+  @media (max-width: 40em) {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+.defra-channel-key__term {
+  margin: 0;
+}
+
+.defra-channel-key__desc {
+  margin: 0;
+  font-size: 16px;
+  color: $govuk-black;
+}

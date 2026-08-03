@@ -1,0 +1,42 @@
+name: Publish Hot Fix
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+env:
+  AWS_REGION: eu-west-2
+  AWS_ACCOUNT_ID: "094954420758"
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    uses: ./.github/workflows/scan.yaml
+    secrets: inherit
+
+  build:
+    name: CDP-build-hotfix-workflow
+    needs: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check lockfile is up to date
+        run: npm ci --omit=dev
+
+      - name: Publish Hot Fix
+        uses: DEFRA/cdp-build-action/build-hotfix@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

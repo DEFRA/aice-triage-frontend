@@ -1,0 +1,12 @@
+// Severity tag colour overrides
+// GDS govuk-tag has built-in colour modifiers for some colours, but
+// the severity concept is service-specific. These classes extend the
+// standard govuk-tag modifier palette used in this service.
+//
+// No CSS changes are needed here as govuk-frontend ships all the
+// standard colour modifier classes (--red, --orange, --yellow, --blue,
+// --grey) that map to the required severity levels.
+//
+// Kept as an explicit file so that future per-severity overrides
+// (e.g. custom background/foreground tweaks) have a clear home.
+

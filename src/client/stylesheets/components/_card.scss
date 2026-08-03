@@ -1,0 +1,117 @@
+@use 'govuk-frontend' as *;
+
+.dfe-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: govuk-spacing(6);
+
+  @include govuk-media-query($until: tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dfe-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: govuk-colour('white');
+  border: 1px solid #b1b4b6;
+  text-decoration: none;
+  color: inherit;
+  transform: translateY(0);
+  transition:
+    border-color 0.1s ease-out,
+    box-shadow 0.1s ease-out,
+    background-color 0.1s ease-out,
+    transform 0.1s ease-out;
+
+  &:hover {
+    background-color: #f3f2f1;
+    border-color: #008531;
+    box-shadow: 0 2px 0 #0b0c0c;
+    transform: translateY(-1px);
+    cursor: pointer;
+  }
+
+  &:focus-within {
+    outline: 3px solid govuk-colour('yellow');
+  }
+}
+
+.dfe-card-container {
+  padding: govuk-spacing(4);
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+}
+
+.dfe-card-link--header {
+  text-decoration: underline;
+  color: #1d70b8;
+  font-weight: 700;
+
+  &::after {
+    position: absolute;
+    content: '';
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  &:visited {
+    color: #1d70b8;
+  }
+}
+
+.dfe-card:hover .dfe-card-link--header,
+.dfe-card:focus-within .dfe-card-link--header {
+  color: #1d70b8;
+}
+
+.dfe-card--disabled {
+  opacity: 0.6;
+  cursor: default;
+
+  &:hover {
+    background-color: govuk-colour('white');
+    border-color: #b1b4b6;
+    box-shadow: none;
+    transform: none;
+    cursor: default;
+  }
+}
+
+// ===== Section Styling =====
+
+.dfe-tools-section {
+  margin-bottom: govuk-spacing(8);
+
+  .govuk-heading-l {
+    display: flex;
+    align-items: center;
+    gap: govuk-spacing(3);
+    flex-wrap: wrap;
+  }
+
+  .dfe-tools-section__badge {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.dfe-tools-section--management .dfe-tools-section__badge {
+  background-color: #008531;
+  color: govuk-colour('white');
+}
+
+.dfe-tools-section--agents .dfe-tools-section__badge {
+  background-color: #2b5fc7;
+  color: govuk-colour('white');
+}

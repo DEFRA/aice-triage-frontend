@@ -1,0 +1,92 @@
+@use 'govuk-frontend' as *;
+
+// Table-of-contents sidebar for the guidance viewer.
+.app-toc {
+  @include govuk-media-query($from: desktop) {
+    position: sticky;
+    top: govuk-spacing(3);
+    max-height: calc(100vh - #{govuk-spacing(6)});
+    overflow-y: auto;
+  }
+}
+
+.app-toc__title {
+  padding-bottom: govuk-spacing(2);
+  border-bottom: 1px solid govuk-colour('mid-grey');
+}
+
+.app-toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  @include govuk-font($size: 16);
+
+  // Nested levels are indented at every depth.
+  .app-toc__list {
+    margin-left: govuk-spacing(3);
+  }
+}
+
+// In the sidebar, nested levels stay collapsed until their branch is open.
+.app-toc .app-toc__list .app-toc__list {
+  display: none;
+}
+
+.app-toc .app-toc__item--open > .app-toc__list {
+  display: block;
+}
+
+// On the landing page the full contents tree is always shown.
+.app-doc-contents {
+  margin-bottom: govuk-spacing(6);
+
+  .app-toc__list {
+    @include govuk-font($size: 19);
+  }
+
+  .app-toc__link {
+    padding: govuk-spacing(2) 0;
+    border-bottom: 1px solid govuk-colour('light-grey');
+  }
+}
+
+.app-toc__link {
+  display: block;
+  padding: govuk-spacing(1) 0;
+
+  &--current {
+    font-weight: bold;
+    box-shadow: inset govuk-spacing(1) 0 0 $govuk-link-colour;
+    padding-left: govuk-spacing(2);
+    margin-left: -#{govuk-spacing(2)};
+  }
+}
+
+.app-toc__number {
+  color: govuk-colour('dark-grey');
+}
+
+// Suppress visited colour on all guidance-related links: ToC nav, rendered
+// Markdown content, and the document titles in the list page.
+.app-toc__link,
+.app-guidance-content a,
+.app-guidance-doc-link {
+  @include govuk-link-style-no-visited-state;
+}
+
+// Images embedded in rendered Markdown guidance content.
+.guidance-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: govuk-spacing(4) 0;
+}
+
+// Rendered Markdown content area.
+.app-guidance-content {
+  margin-bottom: govuk-spacing(6);
+
+  .govuk-table {
+    margin-bottom: govuk-spacing(6);
+  }
+}

@@ -1,2 +1,16 @@
-// import custom component styles
-@use "heading/heading";
+@use 'card';
+@use 'defra-header';
+@use 'defra-footer';
+@use 'defra-layout';
+@use 'defra-navigation'; 
+@use 'defra-service-navigation';
+@use 'defra-tiles';
+@use 'defra-filter-chips';
+@use 'defra-channel-key';
+@use 'landing-page';
+@use 'tech-radar';
+@use 'finding-card';
+@use 'tick-list';
+@use 'severity-tags';
+@use 'issue-overview';
+@use 'guidance-viewer';

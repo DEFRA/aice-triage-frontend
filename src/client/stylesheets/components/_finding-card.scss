@@ -1,0 +1,78 @@
+@use 'govuk-frontend' as *;
+
+// Severity border colours
+$severity-border-colours: (
+  'critical': #d4351c,
+  'high':     #f47738,
+  'medium':   #f2a73d,
+  'low':      #1d70b8,
+  'info':     #b1b4b6,
+);
+
+.app-finding-card {
+  border-left: 4px solid #b1b4b6; // default; overridden via inline style
+  background: govuk-colour('light-grey');
+  padding: 12px 14px;
+  margin-bottom: govuk-spacing(3);
+}
+
+.app-finding-card__header {
+  display: flex;
+  align-items: center;
+  gap: govuk-spacing(2);
+  margin-bottom: govuk-spacing(2);
+}
+
+.app-finding-card__section {
+  font-size: 14px;
+  font-weight: bold;
+  color: govuk-colour('black');
+}
+
+.app-finding-card__body {
+  margin: 0;
+}
+
+.app-finding-card__row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: govuk-spacing(2);
+  padding: govuk-spacing(1) 0;
+  border-bottom: 1px solid govuk-colour('mid-grey');
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  dt {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #505a5f;
+    letter-spacing: 0.5px;
+    margin: 0;
+    padding-top: 2px;
+  }
+
+  dd {
+    font-size: 14px;
+    line-height: 1.55;
+    color: govuk-colour('black');
+    margin: 0;
+  }
+}
+
+.app-accordion-heading__category {
+  font-weight: bold;
+}
+
+.app-accordion-heading__tag {
+  margin-left: govuk-spacing(2);
+  vertical-align: middle;
+}
+
+.app-accordion-heading__count {
+  margin-left: govuk-spacing(2);
+  color: #505a5f;
+  vertical-align: middle;
+}

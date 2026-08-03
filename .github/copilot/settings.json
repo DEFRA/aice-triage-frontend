@@ -1,0 +1,7 @@
+{
+    "enabledPlugins": {
+        "aice-javascript@defra-aice": true,
+        "frontend-developer@defra-ai-plugins": true,
+        "aice-python@defra-aice": false
+    }
+}

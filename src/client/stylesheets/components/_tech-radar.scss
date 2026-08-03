@@ -1,0 +1,123 @@
+.radar-arc {
+  fill: none;
+  stroke: #c0c0c0;
+  stroke-width: 2;
+}
+
+.radar-ring {
+  fill: none;
+  stroke: #cbd5e0;
+  stroke-width: 1;
+}
+
+.tech-radar {
+  overflow: visible;
+  background-color: #eeeeee;
+}
+
+.blip {
+  stroke: #ffffff;
+  stroke-width: 1px;
+  opacity: 0.95;
+  cursor: pointer;
+}
+
+.blip-number {
+  font-size: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  fill: #ffffff;
+  cursor: pointer;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+
+.radar-quadrant {
+  padding: 1rem 0.75rem;
+  box-sizing: border-box;
+
+  h2 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.radar-svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+
+.radar-quadrant--sticky {
+  position: sticky;
+  top: 20px;
+  z-index: 2;
+  align-self: start;
+}
+
+.radar-ring-labels {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  padding: 0.5rem 0.25rem 0;
+  margin: 0;
+  gap: 0;
+
+  &--reversed {
+    justify-content: flex-end;
+    grid-template-columns: 20% 20% 23% 34%;
+  }
+
+  &--standard {
+    justify-content: flex-start;
+    grid-template-columns: 34% 23% 20% 20%;
+  }
+}
+
+.radar-ring-label {
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.25rem 0;
+  text-align: center;
+  font-weight: 700;
+}
+
+@media (max-width: 40rem) {
+  .radar-quadrant h2 {
+    text-align: left !important; /* stylelint-disable-line declaration-no-important */
+  }
+
+  .quadrant-row .radar-svg,
+  .radar-labels {
+    display: none;
+    margin-top: 0;
+  }
+
+  .quadrant-row {
+    margin-top: 0 !important; /* stylelint-disable-line declaration-no-important */
+  }
+
+  .radar-quadrant--sticky {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+.radar-entry:target h3,
+.radar-entry:focus h3,
+.radar-entry:focus-visible h3 {
+  background-color: #00a33b;
+  color: #ffffff;
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+}
+
+.radar-entry:target,
+.radar-entry:focus,
+.radar-entry:focus-visible {
+  border-bottom: 1px solid #00a33b;
+  padding-bottom: 0.5rem;
+}
