@@ -4,7 +4,7 @@ import { pageRouter } from '../../pages/pages.js'
 const router = {
   plugin: {
     name: 'router',
-    async register(server) {
+    async register (server) {
       await server.register([healthRouter, pageRouter])
     }
   }

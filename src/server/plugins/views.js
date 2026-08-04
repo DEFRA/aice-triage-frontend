@@ -41,7 +41,7 @@ const viewPlugin = {
   options: {
     engines: {
       njk: {
-        compile(src, options) {
+        compile (src, options) {
           const template = nunjucks.compile(src, options.environment)
 
           return (context) => template.render(context)

@@ -3,12 +3,12 @@ import { config } from '../../config/config.js'
 
 const BACKEND_HEALTH_TIMEOUT_MS = 2000
 
-function buildBackendHealthUrl() {
+function buildBackendHealthUrl () {
   const baseUrl = config.get('triageApiUrl')
   return new URL('/health', baseUrl).toString()
 }
 
-async function checkBackendHealth() {
+async function checkBackendHealth () {
   const url = buildBackendHealthUrl()
 
   try {
@@ -30,7 +30,7 @@ async function checkBackendHealth() {
   }
 }
 
-async function getHomepage(_request, h) {
+async function getHomepage (_request, h) {
   const backendHealth = await checkBackendHealth()
 
   return h
