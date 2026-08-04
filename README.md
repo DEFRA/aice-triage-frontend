@@ -14,7 +14,6 @@ Frontend service for the AICE triage workflow, built on the Core Delivery Platfo
   - [Setup](#setup)
   - [Development](#development)
   - [Production](#production)
-  - [Guidance API mock data](#guidance-api-mock-data)
   - [Npm scripts](#npm-scripts)
   - [Update dependencies](#update-dependencies)
   - [Formatting](#formatting)
@@ -208,7 +207,6 @@ A local environment with:
 - Redis
 - MongoDB
 - This service.
-- A commented out backend example.
 
 ```bash
 docker compose up --build -d
