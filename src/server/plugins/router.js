@@ -4,15 +4,10 @@ import { pageRouter } from '../../pages/pages.js'
 const router = {
   plugin: {
     name: 'router',
-    async register (server) {
-      await server.register([
-        healthRouter,
-        pageRouter
-      ])
+    async register(server) {
+      await server.register([healthRouter, pageRouter])
     }
   }
 }
 
-export {
-  router
-}
+export { router }

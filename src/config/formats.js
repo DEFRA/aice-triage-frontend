@@ -2,7 +2,7 @@ import isEmail from 'validator/lib/isEmail.js'
 import isURL from 'validator/lib/isURL.js'
 import isIP from 'validator/lib/isIP.js'
 
-function assert (assertion, message) {
+function assert(assertion, message) {
   if (!assertion) {
     throw new Error(message)
   }
@@ -32,8 +32,4 @@ const url = {
   }
 }
 
-export {
-  email,
-  ipaddress,
-  url
-}
+export { email, ipaddress, url }

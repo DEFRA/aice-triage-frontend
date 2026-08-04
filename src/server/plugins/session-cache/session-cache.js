@@ -26,6 +26,4 @@ const sessionCache = {
   }
 }
 
-export {
-  sessionCache
-}
+export { sessionCache }

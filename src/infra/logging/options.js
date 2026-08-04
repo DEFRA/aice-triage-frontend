@@ -24,6 +24,4 @@ const options = {
   nesting: true
 }
 
-export {
-  options
-}
+export { options }

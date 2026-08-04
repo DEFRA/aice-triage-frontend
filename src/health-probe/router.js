@@ -11,12 +11,10 @@ const routes = [
 const router = {
   plugin: {
     name: 'healthRouter',
-    async register (server) {
+    async register(server) {
       server.route(routes)
     }
   }
 }
 
-export {
-  router
-}
+export { router }

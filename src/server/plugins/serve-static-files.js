@@ -5,7 +5,7 @@ import { config } from '../../config/config.js'
 const serveStaticFiles = {
   plugin: {
     name: 'serveStaticFiles',
-    register (server) {
+    register(server) {
       server.route([
         {
           options: {
@@ -17,8 +17,11 @@ const serveStaticFiles = {
           },
           method: 'GET',
           path: '/favicon.ico',
-          handler (_request, h) {
-            return h.response().code(statusCodes.HTTP_STATUS_NO_CONTENT).type('image/x-icon')
+          handler(_request, h) {
+            return h
+              .response()
+              .code(statusCodes.HTTP_STATUS_NO_CONTENT)
+              .type('image/x-icon')
           }
         },
         {
@@ -43,6 +46,4 @@ const serveStaticFiles = {
   }
 }
 
-export {
-  serveStaticFiles
-}
+export { serveStaticFiles }

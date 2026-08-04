@@ -12,7 +12,4 @@ const buildEventLog = (event) => ({
   event: { outcome: 'success', ...event }
 })
 
-export {
-  buildErrorLog,
-  buildEventLog
-}
+export { buildErrorLog, buildEventLog }

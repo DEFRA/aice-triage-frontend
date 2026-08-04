@@ -13,12 +13,7 @@ export default defineConfig({
       reportsDirectory: 'coverage',
       reporter: ['lcov'],
       include: ['src/**/*.js'],
-      exclude: [
-        '**/node_modules/**',
-        '**/tests/**',
-        '.server',
-        'src/index.js'
-      ]
+      exclude: ['**/node_modules/**', '**/tests/**', '.server', 'src/index.js']
     }
   }
 })

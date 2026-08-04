@@ -9,7 +9,7 @@ import { buildErrorLog } from './logging/utils/build-error-log.js'
  * Local development - 1 Redis instance
  * Environments - Elasticache / Redis Cluster with username and password
  */
-function buildRedisClient (redisConfig) {
+function buildRedisClient(redisConfig) {
   const logger = createLogger()
   const port = 6379
   const db = 0
@@ -62,12 +62,13 @@ function buildRedisClient (redisConfig) {
   })
 
   redisClient.on('error', (error) => {
-    logger.error(buildErrorLog(error, { type: 'redis_connection_error' }), 'Redis connection error')
+    logger.error(
+      buildErrorLog(error, { type: 'redis_connection_error' }),
+      'Redis connection error'
+    )
   })
 
   return redisClient
 }
 
-export {
-  buildRedisClient
-}
+export { buildRedisClient }

@@ -27,13 +27,12 @@ const manifestPath = path.join(
   '.public/.vite/manifest.json'
 )
 
-const viteManifest = JSON.parse(
-  fs.readFileSync(manifestPath, 'utf8')
-)
+const viteManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
 
 const getAssetPath = (asset) => {
   const manifestEntry = viteManifest?.[asset]
-  const viteAsset = typeof manifestEntry === 'object' ? manifestEntry?.file : manifestEntry
+  const viteAsset =
+    typeof manifestEntry === 'object' ? manifestEntry?.file : manifestEntry
   return `${assetPath}/${viteAsset ?? asset}`
 }
 
@@ -42,7 +41,7 @@ const viewPlugin = {
   options: {
     engines: {
       njk: {
-        compile (src, options) {
+        compile(src, options) {
           const template = nunjucks.compile(src, options.environment)
 
           return (context) => template.render(context)
@@ -66,6 +65,4 @@ const viewPlugin = {
   }
 }
 
-export {
-  viewPlugin
-}
+export { viewPlugin }

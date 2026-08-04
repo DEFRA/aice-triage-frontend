@@ -45,7 +45,13 @@ const config = convict({
   serviceName: {
     doc: 'Applications Service Name',
     format: String,
-    default: 'AICE Triage Automation',
+    default: 'AICE Triage Automation'
+  },
+  triageApiUrl: {
+    doc: 'Base URL for the triage backend API',
+    format: 'url',
+    default: 'http://localhost:3001',
+    env: 'TRIAGE_API_URL'
   },
   root: {
     doc: 'Project root',
@@ -225,6 +231,4 @@ const config = convict({
 
 config.validate({ allowed: 'strict' })
 
-export {
-  config
-}
+export { config }

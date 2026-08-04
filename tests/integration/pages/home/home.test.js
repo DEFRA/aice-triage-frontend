@@ -21,37 +21,37 @@ describe('#homepageController', () => {
     })
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
-    expect(payload).toContain('RPA Guidance AI Usecase PoC')
+    expect(payload).toContain('Backend API is')
   })
 
-  test('Should contain a link to guidance documents', async () => {
-    const { payload } = await server.inject({
+  test('Should show backend reachable message when health check succeeds', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200
+    })
+
+    const { statusCode, payload } = await server.inject({
       method: 'GET',
       url: '/'
     })
 
-    expect(payload).toContain('/guidance-documents')
-    expect(payload).toContain('Guidance documents')
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('Backend API is reachable')
+    fetchSpy.mockRestore()
   })
 
-  test('Should link to the AI agent tools', async () => {
-    const { payload } = await server.inject({
+  test('Should show backend unavailable message when health check fails', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockRejectedValue(new Error('connect ECONNREFUSED'))
+
+    const { statusCode, payload } = await server.inject({
       method: 'GET',
       url: '/'
     })
 
-    expect(payload).toContain('Guidance pre-publishing checks')
-    expect(payload).toContain('/publishing-checks')
-    expect(payload).toContain('Guidance content review')
-    expect(payload).toContain('/content-review')
-  })
-
-  test('Should not contain a link to /getting-started', async () => {
-    const { payload } = await server.inject({
-      method: 'GET',
-      url: '/'
-    })
-
-    expect(payload).not.toContain('/getting-started')
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('Backend API is unavailable')
+    fetchSpy.mockRestore()
   })
 })

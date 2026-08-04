@@ -11,12 +11,10 @@ const routes = [
 const homeRouter = {
   plugin: {
     name: 'homeRouter',
-    register (server) {
+    register(server) {
       server.route(routes)
     }
   }
 }
 
-export {
-  homeRouter
-}
+export { homeRouter }

@@ -50,7 +50,9 @@ describe('#startServer', () => {
     test('Should log failed startup message', async () => {
       createServerSpy.mockRejectedValue(new Error('Server failed to start'))
 
-      await expect(serverImport.createServer()).rejects.toThrow('Server failed to start')
+      await expect(serverImport.createServer()).rejects.toThrow(
+        'Server failed to start'
+      )
     })
   })
 })

@@ -39,7 +39,9 @@ describe('#catchAll', () => {
       heading: statusCodes.HTTP_STATUS_NOT_FOUND,
       message: 'Page not found'
     })
-    expect(mockToolkitCode).toHaveBeenCalledWith(statusCodes.HTTP_STATUS_NOT_FOUND)
+    expect(mockToolkitCode).toHaveBeenCalledWith(
+      statusCodes.HTTP_STATUS_NOT_FOUND
+    )
   })
 
   test('Should provide expected "Forbidden" page', () => {
@@ -51,7 +53,9 @@ describe('#catchAll', () => {
       heading: statusCodes.HTTP_STATUS_FORBIDDEN,
       message: 'Forbidden'
     })
-    expect(mockToolkitCode).toHaveBeenCalledWith(statusCodes.HTTP_STATUS_FORBIDDEN)
+    expect(mockToolkitCode).toHaveBeenCalledWith(
+      statusCodes.HTTP_STATUS_FORBIDDEN
+    )
   })
 
   test('Should provide expected "Unauthorized" page', () => {
@@ -63,7 +67,9 @@ describe('#catchAll', () => {
       heading: statusCodes.HTTP_STATUS_UNAUTHORIZED,
       message: 'Unauthorized'
     })
-    expect(mockToolkitCode).toHaveBeenCalledWith(statusCodes.HTTP_STATUS_UNAUTHORIZED)
+    expect(mockToolkitCode).toHaveBeenCalledWith(
+      statusCodes.HTTP_STATUS_UNAUTHORIZED
+    )
   })
 
   test('Should provide expected "Bad Request" page', () => {
@@ -75,7 +81,9 @@ describe('#catchAll', () => {
       heading: statusCodes.HTTP_STATUS_BAD_REQUEST,
       message: 'Bad Request'
     })
-    expect(mockToolkitCode).toHaveBeenCalledWith(statusCodes.HTTP_STATUS_BAD_REQUEST)
+    expect(mockToolkitCode).toHaveBeenCalledWith(
+      statusCodes.HTTP_STATUS_BAD_REQUEST
+    )
   })
 
   test('Should provide expected default page', () => {
@@ -91,7 +99,13 @@ describe('#catchAll', () => {
   })
 
   test('Should use boom message when explicitly overridden', () => {
-    catchAll(mockRequest(statusCodes.HTTP_STATUS_NOT_FOUND, 'No analysis found for this document'), mockToolkit)
+    catchAll(
+      mockRequest(
+        statusCodes.HTTP_STATUS_NOT_FOUND,
+        'No analysis found for this document'
+      ),
+      mockToolkit
+    )
 
     expect(mockErrorLogger).not.toHaveBeenCalled()
     expect(mockToolkitView).toHaveBeenCalledWith(errorPage, {
@@ -99,11 +113,16 @@ describe('#catchAll', () => {
       heading: statusCodes.HTTP_STATUS_NOT_FOUND,
       message: 'No analysis found for this document'
     })
-    expect(mockToolkitCode).toHaveBeenCalledWith(statusCodes.HTTP_STATUS_NOT_FOUND)
+    expect(mockToolkitCode).toHaveBeenCalledWith(
+      statusCodes.HTTP_STATUS_NOT_FOUND
+    )
   })
 
   test('Should provide expected "Something went wrong" page and log error for internalServerError', () => {
-    catchAll(mockRequest(statusCodes.HTTP_STATUS_INTERNAL_SERVER_ERROR), mockToolkit)
+    catchAll(
+      mockRequest(statusCodes.HTTP_STATUS_INTERNAL_SERVER_ERROR),
+      mockToolkit
+    )
 
     expect(mockErrorLogger).toHaveBeenCalledWith(
       expect.objectContaining({

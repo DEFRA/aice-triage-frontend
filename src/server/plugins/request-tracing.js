@@ -7,6 +7,4 @@ const requestTracing = {
   options: { tracingHeader: config.get('tracing.header') }
 }
 
-export {
-  requestTracing
-}
+export { requestTracing }

@@ -28,6 +28,4 @@ const contentSecurityPolicy = {
   }
 }
 
-export {
-  contentSecurityPolicy
-}
+export { contentSecurityPolicy }

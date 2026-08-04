@@ -11,7 +11,10 @@ await startServer(server)
 process.on('unhandledRejection', (error) => {
   const logger = createLogger()
 
-  logger.error(buildErrorLog(error, { type: 'unhandled_rejection' }), 'Unhandled rejection')
+  logger.error(
+    buildErrorLog(error, { type: 'unhandled_rejection' }),
+    'Unhandled rejection'
+  )
 
   process.exitCode = 1
 })

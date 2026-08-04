@@ -5,7 +5,7 @@ import { createLogger } from '../../../infra/logging/logger.js'
 import { buildRedisClient } from '../../../infra/redis-client.js'
 import { config } from '../../../config/config.js'
 
-function getCacheEngine (engine) {
+function getCacheEngine(engine) {
   const logger = createLogger()
 
   if (engine === 'redis') {
@@ -24,6 +24,4 @@ function getCacheEngine (engine) {
   return new CatboxMemory.Engine()
 }
 
-export {
-  getCacheEngine
-}
+export { getCacheEngine }

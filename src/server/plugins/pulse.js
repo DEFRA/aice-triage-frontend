@@ -12,6 +12,4 @@ const pulse = {
   }
 }
 
-export {
-  pulse
-}
+export { pulse }

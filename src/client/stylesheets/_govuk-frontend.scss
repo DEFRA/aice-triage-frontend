@@ -2,6 +2,6 @@ $govuk-assets-path: '/public/assets/' !default;
 $govuk-new-organisation-colours: true !default;
 $govuk-global-styles: true !default;
 $govuk-include-default-font-face: false !default;
-$govuk-font-family: ("Helvetica", "Arial", sans-serif) !default;
+$govuk-font-family: ('Helvetica', 'Arial', sans-serif) !default;
 
 @forward 'pkg:govuk-frontend';

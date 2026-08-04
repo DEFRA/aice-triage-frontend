@@ -29,4 +29,3 @@ jobs:
           set +e
           docker build --no-cache --tag ai-uc-rpa-guidance-ui .
           exit $?
-        

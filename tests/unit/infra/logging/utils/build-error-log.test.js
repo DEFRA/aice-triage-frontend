@@ -1,4 +1,7 @@
-import { buildErrorLog, buildEventLog } from '../../../../../src/infra/logging/utils/build-error-log.js'
+import {
+  buildErrorLog,
+  buildEventLog
+} from '../../../../../src/infra/logging/utils/build-error-log.js'
 
 describe('#buildErrorLog', () => {
   test('Should nest event fields under event and force outcome to failure', () => {
