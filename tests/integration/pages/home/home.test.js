@@ -54,4 +54,19 @@ describe('#homepageController', () => {
     expect(payload).toContain('Backend API is unavailable')
     fetchSpy.mockRestore()
   })
+  test('Should show backend unavailable message when health check returns non-ok status', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 503
+    })
+
+    const { statusCode, payload } = await server.inject({
+      method: 'GET',
+      url: '/'
+    })
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('Backend API is unavailable')
+    fetchSpy.mockRestore()
+  })
 })

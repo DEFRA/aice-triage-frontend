@@ -10,7 +10,7 @@ const STATUS_CODE_MESSAGES = {
   [statusCodes.HTTP_STATUS_BAD_REQUEST]: 'Bad Request'
 }
 
-function statusCodeMessage (boom) {
+function statusCodeMessage(boom) {
   const { payload } = boom.output
   const { error, message, statusCode } = payload
 
@@ -22,7 +22,7 @@ function statusCodeMessage (boom) {
   return STATUS_CODE_MESSAGES[statusCode] ?? 'Something went wrong'
 }
 
-function catchAll (request, h) {
+function catchAll(request, h) {
   const { response } = request
 
   if (!('isBoom' in response)) {
