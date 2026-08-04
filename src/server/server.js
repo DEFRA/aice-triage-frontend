@@ -26,7 +26,7 @@ import { pulse } from './plugins/pulse.js'
  *
  * @returns {Promise<Hapi.Server>} A promise representing a Hapi server instance
  */
-async function createServer() {
+async function createServer () {
   const server = Hapi.server({
     host: config.get('host'),
     port: config.get('port'),
@@ -100,7 +100,7 @@ async function createServer() {
  *
  * @returns {Promise<void>} A promise that resolves when the server has started
  */
-async function startServer(server) {
+async function startServer (server) {
   await server.start()
 
   server.logger.info('Server started successfully')

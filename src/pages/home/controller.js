@@ -1,12 +1,12 @@
 import { statusCodes } from '../../constants/status-codes.js'
 import { config } from '../../config/config.js'
 
-function buildBackendHealthUrl() {
+function buildBackendHealthUrl () {
   const baseUrl = config.get('triageApiUrl')
   return new URL('/health', baseUrl).toString()
 }
 
-async function checkBackendHealth() {
+async function checkBackendHealth () {
   const url = buildBackendHealthUrl()
 
   try {
@@ -28,7 +28,7 @@ async function checkBackendHealth() {
   }
 }
 
-async function getHomepage(request, h) {
+async function getHomepage (request, h) {
   const backendHealth = await checkBackendHealth()
 
   return h
