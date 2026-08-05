@@ -1,0 +1,48 @@
+@use '../variables/colours' as *;
+
+.defra-breadcrumb-bar {
+  background-color: $defra-green;
+  padding: 10px 0;
+
+  &__link {
+    display: inline-block;
+    padding-block: 2px;
+    color: $govuk-white;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 0.1em;
+
+    &:hover {
+      color: $govuk-white;
+      text-decoration-thickness: 3px;
+    }
+
+    &:focus {
+      outline: 3px solid $govuk-focus-colour;
+      outline-offset: 0;
+      background-color: $govuk-focus-colour;
+      color: $govuk-black;
+      text-decoration: none;
+    }
+
+    &:visited {
+      color: $govuk-white;
+    }
+  }
+
+  &__separator {
+    color: $govuk-white;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    margin: 0 5px;
+  }
+
+  &__current {
+    color: $govuk-white;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+  }
+}

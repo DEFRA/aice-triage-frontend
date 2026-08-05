@@ -1,28 +1,42 @@
-import path from 'path'
-import hapi from '@hapi/hapi'
-import Scooter from '@hapi/scooter'
+import path from 'node:path'
 
-import { router } from './plugins/router.js'
-import { config } from '#/config/config.js'
-import { pulse } from './plugins/pulse.js'
-import { catchAll } from './common/helpers/errors.js'
-import { nunjucksConfig } from '#/config/nunjucks/nunjucks.js'
-import { requestTracing } from './plugins/request-tracing.js'
-import { requestLogger } from './plugins/request-logger.js'
-import { sessionCache } from './plugins/session-cache.js'
-import { getCacheEngine } from './common/helpers/session-cache/cache-engine.js'
-import { secureContext } from '@defra/hapi-secure-context'
-import { contentSecurityPolicy } from './plugins/content-security-policy.js'
 import { metrics } from '@defra/cdp-metrics'
+import { secureContext } from '@defra/hapi-secure-context'
 
-export async function createServer() {
-  const server = hapi.server({
+import Hapi from '@hapi/hapi'
+import HapiInert from '@hapi/inert'
+import Scooter from '@hapi/scooter'
+import HapiPino from 'hapi-pino'
+
+import { config } from '../config/config.js'
+import { catchAll } from './catch-all.js'
+import { options as loggerOptions } from '../infra/logging/options.js'
+
+import { contentSecurityPolicy } from './plugins/content-security-policy.js'
+import { requestTracing } from './plugins/request-tracing.js'
+import { router } from './plugins/router.js'
+import { serveStaticFiles } from './plugins/serve-static-files.js'
+import { sessionCache } from './plugins/session-cache/session-cache.js'
+import { getCacheEngine } from './plugins/session-cache/cache-engine.js'
+import { viewPlugin } from './plugins/views.js'
+import { pulse } from './plugins/pulse.js'
+
+/**
+ * Creates and configures a Hapi.Server instance
+ *
+ * @returns {Promise<Hapi.Server>} A promise representing a Hapi server instance
+ */
+async function createServer () {
+  const server = Hapi.server({
     host: config.get('host'),
     port: config.get('port'),
     routes: {
       validate: {
         options: {
-          abortEarly: false
+          abortEarly: false,
+          // Forms include a hidden `_csrf` field (template convention); strip
+          // unvalidated keys so they don't fail strict object validation.
+          stripUnknown: true
         }
       },
       files: {
@@ -36,7 +50,7 @@ export async function createServer() {
         },
         xss: 'enabled',
         noSniff: true,
-        xframe: true
+        xframe: 'sameorigin'
       }
     },
     router: {
@@ -52,20 +66,47 @@ export async function createServer() {
       strictHeader: false
     }
   })
-  await server.register([
-    requestLogger,
+
+  await server.register({
+    plugin: HapiPino,
+    options: loggerOptions
+  })
+
+  const plugins = [
     requestTracing,
     metrics,
     secureContext,
     pulse,
     sessionCache,
-    nunjucksConfig,
     Scooter,
     contentSecurityPolicy,
-    router // Register all the controllers/routes defined in src/server/router.js
-  ])
+    HapiInert,
+    serveStaticFiles,
+    viewPlugin,
+    router
+  ]
+
+  await server.register(plugins)
 
   server.ext('onPreResponse', catchAll)
 
   return server
 }
+
+/**
+ * Helper function to start the Hapi server
+ *
+ * @param {Hapi.Server} server - The Hapi server instance to start
+ *
+ * @returns {Promise<void>} A promise that resolves when the server has started
+ */
+async function startServer (server) {
+  await server.start()
+
+  server.logger.info('Server started successfully')
+  server.logger.info(
+    `Access your frontend on http://localhost:${config.get('port')}`
+  )
+}
+
+export { createServer, startServer }

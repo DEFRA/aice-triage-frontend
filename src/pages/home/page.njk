@@ -1,0 +1,30 @@
+{% extends "common/layout.njk" %}
+
+{% set pageTitle = 'Home' %}
+{% set page = 'home' %}
+
+{% block content %}
+  <div class="govuk-width-container govuk-!-margin-top-6">
+
+    {% if backendHealth.reachable %}
+      <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
+        <div class="govuk-notification-banner__header">
+          <h2 class="govuk-notification-banner__title">Backend status</h2>
+        </div>
+        <div class="govuk-notification-banner__content">
+          <p class="govuk-body">Backend API is reachable.</p>
+        </div>
+      </div>
+    {% else %}
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          Backend API is unavailable. You can still access this page, but
+          backend-dependent features are not available.
+        </strong>
+      </div>
+    {% endif %}
+
+  </div>
+{% endblock %}

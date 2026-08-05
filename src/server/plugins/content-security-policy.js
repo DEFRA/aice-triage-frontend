@@ -20,11 +20,11 @@ const contentSecurityPolicy = {
     ],
     imgSrc: ['self', 'data:'],
     frameSrc: ['self', 'data:'],
-    objectSrc: ['none'],
+    objectSrc: ['self'],
     frameAncestors: ['none'],
     formAction: ['self'],
     manifestSrc: ['self'],
-    generateNonces: false
+    generateNonces: true
   }
 }
 

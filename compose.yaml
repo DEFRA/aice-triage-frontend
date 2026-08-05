@@ -1,0 +1,27 @@
+services:
+  redis:
+    image: redis:7.2.3-alpine3.18
+    ports:
+      - '6379:6379'
+    restart: always
+    networks:
+      - aice-triage-frontend
+
+  aice-triage-frontend:
+    build: ./
+    ports:
+      - '3000:3000'
+    env_file:
+      - '.env'
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      REDIS_HOST: redis
+      LOCALSTACK_ENDPOINT: http://localstack:4566
+      USE_SINGLE_INSTANCE_CACHE: true
+    networks:
+      - aice-triage-frontend
+
+networks:
+  aice-triage-frontend:
+    driver: bridge

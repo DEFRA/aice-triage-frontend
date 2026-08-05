@@ -4,7 +4,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_aice-triage-frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=DEFRA_aice-triage-frontend)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_aice-triage-frontend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_aice-triage-frontend)
 
-Core delivery platform Node.js Frontend Template.
+Frontend service for the AICE triage workflow, built on the Core Delivery Platform. Renders GOV.UK Design System pages and talks server-side to the `aice-triage-automation` backend API. The browser never calls the backend directly.
 
 - [Requirements](#requirements)
   - [Node.js](#nodejs)
@@ -101,11 +101,31 @@ npm run git:hooks
 
 ### Development
 
-To run the application in `development` mode run:
+To run the frontend and backend together locally:
+
+**1. Start the backend** (`aice-triage-automation` repo):
+
+```bash
+npm run start:dev
+```
+
+The backend runs on `http://localhost:3001` by default.
+
+**2. Start the frontend** (this repo):
 
 ```bash
 npm run dev
 ```
+
+The frontend runs on `http://localhost:3000`. The home page shows whether the backend is reachable.
+
+To point the frontend at a different backend address:
+
+```bash
+TRIAGE_API_URL=http://localhost:3002 npm run dev
+```
+
+In deployed environments `TRIAGE_API_URL` is set per-environment in the platform config — no code changes needed.
 
 ### Production
 
@@ -187,7 +207,6 @@ A local environment with:
 - Redis
 - MongoDB
 - This service.
-- A commented out backend example.
 
 ```bash
 docker compose up --build -d
