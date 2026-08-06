@@ -1,6 +1,9 @@
 import { config } from '../../config/config.js'
+import { statusCodes } from '../../constants/status-codes.js'
 
 const BACKEND_TIMEOUT_MS = 2000
+const BACKEND_UNAVAILABLE = 'backend-unavailable'
+const NOT_FOUND = 'not-found'
 
 class SubmissionsApiError extends Error {
   constructor (kind) {
@@ -20,7 +23,7 @@ async function listUnprocessedSubmissions () {
     })
 
     if (!response.ok) {
-      throw new SubmissionsApiError('backend-unavailable')
+      throw new SubmissionsApiError(BACKEND_UNAVAILABLE)
     }
 
     return await response.json()
@@ -29,7 +32,7 @@ async function listUnprocessedSubmissions () {
       throw error
     }
 
-    throw new SubmissionsApiError('backend-unavailable')
+    throw new SubmissionsApiError(BACKEND_UNAVAILABLE)
   }
 }
 
@@ -42,12 +45,12 @@ async function getSubmissionById (submissionId) {
       signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS)
     })
 
-    if (response.status === 404) {
-      throw new SubmissionsApiError('not-found')
+    if (response.status === statusCodes.HTTP_STATUS_NOT_FOUND) {
+      throw new SubmissionsApiError(NOT_FOUND)
     }
 
     if (!response.ok) {
-      throw new SubmissionsApiError('backend-unavailable')
+      throw new SubmissionsApiError(BACKEND_UNAVAILABLE)
     }
 
     return await response.json()
@@ -56,7 +59,7 @@ async function getSubmissionById (submissionId) {
       throw error
     }
 
-    throw new SubmissionsApiError('backend-unavailable')
+    throw new SubmissionsApiError(BACKEND_UNAVAILABLE)
   }
 }
 
