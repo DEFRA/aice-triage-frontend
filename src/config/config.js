@@ -132,28 +132,28 @@ const config = convict({
       default: true,
       env: 'AUTH_ENABLED'
     },
-   redirectUri: {
+    redirectUri: {
       doc: 'Redirect Uri',
       format: String,
-      default: '',
+      default: null,
       env: 'AUTH_REDIRECT_URI'
     },
     tenantId: {
       doc: 'Entra ID tenant ID',
       format: String,
-      default: '',
+      default: null,
       env: 'AUTH_TENANT_ID'
     },
     clientId: {
       doc: 'Entra ID app registration client ID',
       format: String,
-      default: '',
+      default: null,
       env: 'AUTH_CLIENT_ID'
     },
     clientSecret: {
       doc: 'Entra ID app registration client secret',
       format: String,
-      default: '',
+      default: null,
       sensitive: true,
       env: 'AUTH_CLIENT_SECRET'
     }
@@ -211,14 +211,16 @@ const config = convict({
     username: {
       doc: 'Redis cache username',
       format: String,
-      default: '',
+      default: null,
+      nullable: process.env.NODE_ENV !== 'production',
       env: 'REDIS_USERNAME'
     },
     password: {
       doc: 'Redis cache password',
       format: '*',
-      default: '',
       sensitive: true,
+      default: null,
+      nullable: process.env.NODE_ENV !== 'production',
       env: 'REDIS_PASSWORD'
     },
     keyPrefix: {

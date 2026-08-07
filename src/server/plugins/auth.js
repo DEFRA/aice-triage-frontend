@@ -1,7 +1,8 @@
 import Bell from '@hapi/bell'
 import HapiCookie from '@hapi/cookie'
+import Jwt from '@hapi/jwt'
 
-import { config } from '../../../config/config.js'
+import { config } from '../../config/config.js'
 
 function _getBellOptions () {
   return {
@@ -14,10 +15,7 @@ function _getBellOptions () {
     password: config.get('session.cookie.password'),
     isSecure: config.get('session.cookie.secure'),
     location: config.get('auth.redirectUri'),
-    scope: ['openid', 'profile', 'User.Read'],
-    providerParams: {
-      response_mode: 'form_post'
-    }
+    scope: ['openid', 'profile', 'User.Read']
   }
 }
 
@@ -25,13 +23,12 @@ function _getCookieOptions () {
   return {
     cookie: {
       name: 'auth-session',
+      path: '/',
       password: config.get('session.cookie.password'),
       isSecure: config.get('session.cookie.secure'),
       ttl: config.get('session.cookie.ttl')
     },
-    keepAlive: true,
     redirectTo: '/login/callback',
-    appendNext: true,
     validate: _validateSessionToken
   }
 }

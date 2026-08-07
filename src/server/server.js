@@ -12,6 +12,7 @@ import { config } from '../config/config.js'
 import { catchAll } from './catch-all.js'
 import { options as loggerOptions } from '../infra/logging/options.js'
 
+import { auth } from './plugins/auth.js'
 import { contentSecurityPolicy } from './plugins/content-security-policy.js'
 import { requestTracing } from './plugins/request-tracing.js'
 import { router } from './plugins/router.js'
@@ -21,8 +22,8 @@ import { getCacheEngine } from './plugins/session-cache/cache-engine.js'
 import { viewPlugin } from './plugins/views.js'
 import { pulse } from './plugins/pulse.js'
 
-import { auth } from './auth/helpers/auth.js'
-import { authRoutes } from './auth/index.js'
+import { authRouter } from './auth/router.js'
+
 /**
  * Creates and configures a Hapi.Server instance
  *
@@ -81,7 +82,7 @@ async function createServer () {
     pulse,
     sessionCache,
     auth,
-    authRoutes,
+    authRouter,
     Scooter,
     contentSecurityPolicy,
     HapiInert,
@@ -91,6 +92,12 @@ async function createServer () {
   ]
 
   await server.register(plugins)
+
+  server.app.cache = server.cache({
+    cache: config.get('session.cache.name'),
+    segment: 'session',
+    expiresIn: config.get('session.cache.ttl')
+  })
 
   server.ext('onPreResponse', catchAll)
 

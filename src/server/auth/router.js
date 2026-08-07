@@ -1,18 +1,10 @@
 import { authController } from './controller.js'
 
-const authRoutes = {
+const authRouter = {
   plugin: {
     name: 'authRoutes',
     register (server) {
       server.route([
-        {
-          method: 'GET',
-          path: '/login',
-          options: { auth: 'azure' },
-          handler (request, h) {
-            return h.redirect(request.query.next ?? '/')
-          }
-        },
         {
           method: ['GET', 'POST'],
           path: '/login/callback',
@@ -25,10 +17,10 @@ const authRoutes = {
           method: 'GET',
           path: '/logout',
           options: { auth: { mode: 'try', strategy: 'session' } },
-          handler (request, h) {
+          async handler (request, h) {
             const sessionId = request.auth.credentials?.id
             if (sessionId) {
-              request.yar.clear(sessionId)
+              await request.server.app.cache.drop(sessionId)
             }
             request.cookieAuth.clear()
             return h.redirect('/login')
@@ -39,4 +31,4 @@ const authRoutes = {
   }
 }
 
-export { authRoutes }
+export { authRouter }
