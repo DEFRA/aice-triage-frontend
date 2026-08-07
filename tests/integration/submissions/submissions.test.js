@@ -52,18 +52,22 @@ describe('#submissions pages', () => {
       }
     ])
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions')
+    const { statusCode, payload } =
+      await injectWithStubbedCredentials('/submissions')
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('SUB-2026-0184')
     expect(payload).toContain('31 July 2026')
-    expect(payload).toContain('We spend two days a week reading grant applications by hand')
+    expect(payload).toContain(
+      'We spend two days a week reading grant applications by hand'
+    )
   })
 
   test('queue: empty list shows empty-state message and no table headers', async () => {
     submissionsApi.listUnprocessedSubmissions.mockResolvedValue([])
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions')
+    const { statusCode, payload } =
+      await injectWithStubbedCredentials('/submissions')
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('No submissions waiting')
@@ -81,7 +85,8 @@ describe('#submissions pages', () => {
       }
     ])
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions')
+    const { statusCode, payload } =
+      await injectWithStubbedCredentials('/submissions')
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('22 July 2026')
@@ -113,7 +118,9 @@ describe('#submissions pages', () => {
       text: 'Full body text line 1\nline 2'
     })
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions/SUB-2026-0184')
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('SUB-2026-0184')
@@ -127,7 +134,9 @@ describe('#submissions pages', () => {
       new submissionsApi.SubmissionsApiError('not-found')
     )
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions/SUB-UNKNOWN')
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-UNKNOWN'
+    )
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_NOT_FOUND)
     expect(payload).toContain('Page not found')
@@ -138,7 +147,8 @@ describe('#submissions pages', () => {
       new submissionsApi.SubmissionsApiError('backend-unavailable')
     )
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions')
+    const { statusCode, payload } =
+      await injectWithStubbedCredentials('/submissions')
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('the triage service is unavailable')
@@ -150,7 +160,9 @@ describe('#submissions pages', () => {
       new submissionsApi.SubmissionsApiError('backend-unavailable')
     )
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions/SUB-2026-0184')
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('the triage service is unavailable')
@@ -166,11 +178,15 @@ describe('#submissions pages', () => {
       text: '<script>alert(1)</script><b>hello</b>'
     })
 
-    const { statusCode, payload } = await injectWithStubbedCredentials('/submissions/SUB-2026-XSS')
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-XSS'
+    )
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).not.toContain('<script>')
     expect(payload).not.toContain('<b>hello</b>')
-    expect(payload).toContain('&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;hello&lt;/b&gt;')
+    expect(payload).toContain(
+      '&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;hello&lt;/b&gt;'
+    )
   })
 })

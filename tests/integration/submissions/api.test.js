@@ -48,17 +48,20 @@ describe('#submissions api', () => {
         .query({ status: 'unprocessed' })
         .replyWithError('network down')
 
-      await expect(listUnprocessedSubmissions()).rejects.toBeInstanceOf(SubmissionsApiError)
+      await expect(listUnprocessedSubmissions()).rejects.toBeInstanceOf(
+        SubmissionsApiError
+      )
     })
   })
 
   describe('#getSubmissionById', () => {
     test('Should return a submission when the backend responds successfully', async () => {
-      const submission = { submissionId: 'SUB-1', receivedAt: '2026-07-31T09:00:00.000Z' }
+      const submission = {
+        submissionId: 'SUB-1',
+        receivedAt: '2026-07-31T09:00:00.000Z'
+      }
 
-      nock(baseUrl)
-        .get('/submissions/SUB-1')
-        .reply(200, submission)
+      nock(baseUrl).get('/submissions/SUB-1').reply(200, submission)
 
       const result = await getSubmissionById('SUB-1')
 
@@ -66,9 +69,7 @@ describe('#submissions api', () => {
     })
 
     test('Should throw a not-found error when the backend responds with 404', async () => {
-      nock(baseUrl)
-        .get('/submissions/SUB-UNKNOWN')
-        .reply(404)
+      nock(baseUrl).get('/submissions/SUB-UNKNOWN').reply(404)
 
       await expect(getSubmissionById('SUB-UNKNOWN')).rejects.toMatchObject({
         name: 'SubmissionsApiError',
@@ -77,9 +78,7 @@ describe('#submissions api', () => {
     })
 
     test('Should throw a backend-unavailable error when the backend responds with a server error', async () => {
-      nock(baseUrl)
-        .get('/submissions/SUB-1')
-        .reply(500)
+      nock(baseUrl).get('/submissions/SUB-1').reply(500)
 
       await expect(getSubmissionById('SUB-1')).rejects.toMatchObject({
         name: 'SubmissionsApiError',
@@ -88,11 +87,11 @@ describe('#submissions api', () => {
     })
 
     test('Should throw a backend-unavailable error when the request fails', async () => {
-      nock(baseUrl)
-        .get('/submissions/SUB-1')
-        .replyWithError('network down')
+      nock(baseUrl).get('/submissions/SUB-1').replyWithError('network down')
 
-      await expect(getSubmissionById('SUB-1')).rejects.toBeInstanceOf(SubmissionsApiError)
+      await expect(getSubmissionById('SUB-1')).rejects.toBeInstanceOf(
+        SubmissionsApiError
+      )
     })
   })
 })
