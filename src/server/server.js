@@ -21,6 +21,8 @@ import { getCacheEngine } from './plugins/session-cache/cache-engine.js'
 import { viewPlugin } from './plugins/views.js'
 import { pulse } from './plugins/pulse.js'
 
+import { auth } from './auth/helpers/auth.js'
+import { authRoutes } from './auth/index.js'
 /**
  * Creates and configures a Hapi.Server instance
  *
@@ -78,6 +80,8 @@ async function createServer () {
     secureContext,
     pulse,
     sessionCache,
+    auth,
+    authRoutes,
     Scooter,
     contentSecurityPolicy,
     HapiInert,

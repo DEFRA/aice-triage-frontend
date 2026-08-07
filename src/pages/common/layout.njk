@@ -17,6 +17,10 @@
         class="defra-header__logo"
       />
       <a href="/" class="defra-header__service-name">{{ serviceName }}</a>
+      {% if user %}
+        <span class="defra-header__user">{{ user.displayName }}</span>
+        <a href="/logout" class="defra-header__link">Sign out</a>
+      {% endif %}
     </div>
     </div>
   </header>

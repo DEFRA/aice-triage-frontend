@@ -125,6 +125,39 @@ const config = convict({
     default: isProduction,
     env: 'ENABLE_SECURE_CONTEXT'
   },
+  auth: {
+    enabled: {
+      doc: 'Enable Entra ID authentication (disable for local/test convenience)',
+      format: Boolean,
+      default: true,
+      env: 'AUTH_ENABLED'
+    },
+   redirectUri: {
+      doc: 'Redirect Uri',
+      format: String,
+      default: '',
+      env: 'AUTH_REDIRECT_URI'
+    },
+    tenantId: {
+      doc: 'Entra ID tenant ID',
+      format: String,
+      default: '',
+      env: 'AUTH_TENANT_ID'
+    },
+    clientId: {
+      doc: 'Entra ID app registration client ID',
+      format: String,
+      default: '',
+      env: 'AUTH_CLIENT_ID'
+    },
+    clientSecret: {
+      doc: 'Entra ID app registration client secret',
+      format: String,
+      default: '',
+      sensitive: true,
+      env: 'AUTH_CLIENT_SECRET'
+    }
+  },
   session: {
     cache: {
       engine: {
