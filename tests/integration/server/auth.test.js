@@ -41,9 +41,15 @@ describe('auth routes', () => {
   })
 
   test('a subsequent unauthenticated request is rejected after logout', async () => {
+    server.route({
+      method: 'GET',
+      path: '/__test-protected-route',
+      handler: () => 'ok'
+    })
+
     const { statusCode } = await server.inject({
       method: 'GET',
-      url: '/'
+      url: '/__test-protected-route'
     })
 
     expect(statusCode).not.toBe(200)

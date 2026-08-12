@@ -25,6 +25,12 @@ const authRouter = {
             request.cookieAuth.clear()
             return h.redirect('/login')
           }
+        },
+        {
+          method: 'GET',
+          path: '/login',
+          options: { auth: { mode: 'try', strategy: 'azure' } },
+          handler: () => {} // Bell intercepts the request and issues the redirect
         }
       ])
     }
