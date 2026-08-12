@@ -3,8 +3,7 @@ import nock from 'nock'
 import { config } from '../../../src/config/config.js'
 import {
   listUnprocessedSubmissions,
-  getSubmissionById,
-  SubmissionsApiError
+  getSubmissionById
 } from '../../../src/pages/submissions/api.js'
 
 const baseUrl = config.get('triageApiUrl')
@@ -27,30 +26,27 @@ describe('#submissions api', () => {
 
       const result = await listUnprocessedSubmissions()
 
-      expect(result).toEqual(submissions)
+      expect(result).toEqual({ ok: true, status: 200, data: submissions })
     })
 
-    test('Should throw a backend-unavailable error when the backend responds with an error status', async () => {
+    test('Should throw when the backend responds with an error status', async () => {
       nock(baseUrl)
         .get('/submissions')
         .query({ status: 'unprocessed' })
         .reply(500)
 
       await expect(listUnprocessedSubmissions()).rejects.toMatchObject({
-        name: 'SubmissionsApiError',
-        kind: 'backend-unavailable'
+        statusCode: 500
       })
     })
 
-    test('Should throw a backend-unavailable error when the request fails', async () => {
+    test('Should throw when the request fails', async () => {
       nock(baseUrl)
         .get('/submissions')
         .query({ status: 'unprocessed' })
         .replyWithError('network down')
 
-      await expect(listUnprocessedSubmissions()).rejects.toBeInstanceOf(
-        SubmissionsApiError
-      )
+      await expect(listUnprocessedSubmissions()).rejects.toThrow()
     })
   })
 
@@ -65,33 +61,29 @@ describe('#submissions api', () => {
 
       const result = await getSubmissionById('SUB-1')
 
-      expect(result).toEqual(submission)
+      expect(result).toEqual({ ok: true, status: 200, data: submission })
     })
 
-    test('Should throw a not-found error when the backend responds with 404', async () => {
+    test('Should return ok:false when the backend responds with 404', async () => {
       nock(baseUrl).get('/submissions/SUB-UNKNOWN').reply(404)
 
-      await expect(getSubmissionById('SUB-UNKNOWN')).rejects.toMatchObject({
-        name: 'SubmissionsApiError',
-        kind: 'not-found'
-      })
+      const result = await getSubmissionById('SUB-UNKNOWN')
+
+      expect(result).toEqual({ ok: false, status: 404, data: null })
     })
 
-    test('Should throw a backend-unavailable error when the backend responds with a server error', async () => {
+    test('Should throw when the backend responds with a server error', async () => {
       nock(baseUrl).get('/submissions/SUB-1').reply(500)
 
       await expect(getSubmissionById('SUB-1')).rejects.toMatchObject({
-        name: 'SubmissionsApiError',
-        kind: 'backend-unavailable'
+        statusCode: 500
       })
     })
 
-    test('Should throw a backend-unavailable error when the request fails', async () => {
+    test('Should throw when the request fails', async () => {
       nock(baseUrl).get('/submissions/SUB-1').replyWithError('network down')
 
-      await expect(getSubmissionById('SUB-1')).rejects.toBeInstanceOf(
-        SubmissionsApiError
-      )
+      await expect(getSubmissionById('SUB-1')).rejects.toThrow()
     })
   })
 })

@@ -2,14 +2,20 @@ import { config } from '../../config/config.js'
 import { statusCodes } from '../../constants/status-codes.js'
 
 const BACKEND_TIMEOUT_MS = 2000
-const BACKEND_UNAVAILABLE = 'backend-unavailable'
-const NOT_FOUND = 'not-found'
 
 class SubmissionsApiError extends Error {
-  constructor (kind) {
-    super(kind)
+  constructor (message, statusCode) {
+    super(message)
     this.name = 'SubmissionsApiError'
-    this.kind = kind
+    this.statusCode = statusCode
+  }
+
+  static fromResponse (path, response) {
+    const message =
+      `Submissions API GET ${path} ` +
+      `failed: ${response.status} ${response.statusText}`
+
+    return new SubmissionsApiError(message, response.status)
   }
 }
 
@@ -17,30 +23,19 @@ async function request (path, { expected = [] } = {}) {
   const baseUrl = config.get('triageApiUrl')
   const url = new URL(path, baseUrl).toString()
 
-  try {
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS)
-    })
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS)
+  })
 
-    if (
-      response.status === statusCodes.HTTP_STATUS_NOT_FOUND &&
-      expected.includes(NOT_FOUND)
-    ) {
-      throw new SubmissionsApiError(NOT_FOUND)
-    }
-
-    if (!response.ok) {
-      throw new SubmissionsApiError(BACKEND_UNAVAILABLE)
-    }
-
-    return await response.json()
-  } catch (error) {
-    if (error instanceof SubmissionsApiError) {
-      throw error
-    }
-
-    throw new SubmissionsApiError(BACKEND_UNAVAILABLE)
+  if (response.ok) {
+    return { ok: true, status: response.status, data: await response.json() }
   }
+
+  if (expected.includes(response.status)) {
+    return { ok: false, status: response.status, data: null }
+  }
+
+  throw SubmissionsApiError.fromResponse(path, response)
 }
 
 async function listUnprocessedSubmissions () {
@@ -48,7 +43,9 @@ async function listUnprocessedSubmissions () {
 }
 
 async function getSubmissionById (submissionId) {
-  return request(`/submissions/${submissionId}`, { expected: [NOT_FOUND] })
+  return request(`/submissions/${submissionId}`, {
+    expected: [statusCodes.HTTP_STATUS_NOT_FOUND]
+  })
 }
 
 export { listUnprocessedSubmissions, getSubmissionById, SubmissionsApiError }

@@ -3,21 +3,10 @@ import { constants as statusCodes } from 'node:http2'
 import { createServer } from '../../../src/server/server.js'
 import * as submissionsApi from '../../../src/pages/submissions/api.js'
 
-vi.mock('../../../src/pages/submissions/api.js', () => {
-  class SubmissionsApiError extends Error {
-    constructor (kind) {
-      super(kind)
-      this.name = 'SubmissionsApiError'
-      this.kind = kind
-    }
-  }
-
-  return {
-    listUnprocessedSubmissions: vi.fn(),
-    getSubmissionById: vi.fn(),
-    SubmissionsApiError
-  }
-})
+vi.mock('../../../src/pages/submissions/api.js', () => ({
+  listUnprocessedSubmissions: vi.fn(),
+  getSubmissionById: vi.fn()
+}))
 
 describe('#submissions pages', () => {
   let server
@@ -42,15 +31,19 @@ describe('#submissions pages', () => {
     })
   }
   test('queue: populated list renders identifier, received date and preview', async () => {
-    submissionsApi.listUnprocessedSubmissions.mockResolvedValue([
-      {
-        submissionId: 'SUB-2026-0184',
-        receivedAt: '2026-07-31T09:52:46.854Z',
-        status: 'unprocessed',
-        submittedAt: '2026-07-31T09:00:00.000Z',
-        text: 'We spend two days a week reading grant applications by hand'
-      }
-    ])
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0184',
+          receivedAt: '2026-07-31T09:52:46.854Z',
+          status: 'unprocessed',
+          submittedAt: '2026-07-31T09:00:00.000Z',
+          text: 'We spend two days a week reading grant applications by hand'
+        }
+      ]
+    })
 
     const { statusCode, payload } =
       await injectWithStubbedCredentials('/submissions')
@@ -64,7 +57,11 @@ describe('#submissions pages', () => {
   })
 
   test('queue: empty list shows empty-state message and no table headers', async () => {
-    submissionsApi.listUnprocessedSubmissions.mockResolvedValue([])
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: []
+    })
 
     const { statusCode, payload } =
       await injectWithStubbedCredentials('/submissions')
@@ -75,15 +72,19 @@ describe('#submissions pages', () => {
   })
 
   test('queue: submittedAt null does not break rendering (uses receivedAt)', async () => {
-    submissionsApi.listUnprocessedSubmissions.mockResolvedValue([
-      {
-        submissionId: 'SUB-2026-0999',
-        receivedAt: '2026-07-22T12:00:00.000Z',
-        status: 'unprocessed',
-        submittedAt: null,
-        text: 'Null submittedAt should not crash'
-      }
-    ])
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0999',
+          receivedAt: '2026-07-22T12:00:00.000Z',
+          status: 'unprocessed',
+          submittedAt: null,
+          text: 'Null submittedAt should not crash'
+        }
+      ]
+    })
 
     const { statusCode, payload } =
       await injectWithStubbedCredentials('/submissions')
@@ -94,15 +95,19 @@ describe('#submissions pages', () => {
   })
 
   test('queue: each row links to detail page', async () => {
-    submissionsApi.listUnprocessedSubmissions.mockResolvedValue([
-      {
-        submissionId: 'SUB-2026-0184',
-        receivedAt: '2026-07-31T09:52:46.854Z',
-        status: 'unprocessed',
-        submittedAt: null,
-        text: 'Preview text'
-      }
-    ])
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0184',
+          receivedAt: '2026-07-31T09:52:46.854Z',
+          status: 'unprocessed',
+          submittedAt: null,
+          text: 'Preview text'
+        }
+      ]
+    })
 
     const { payload } = await injectWithStubbedCredentials('/submissions')
 
@@ -111,11 +116,15 @@ describe('#submissions pages', () => {
 
   test('detail: known id renders full raw text', async () => {
     submissionsApi.getSubmissionById.mockResolvedValue({
-      submissionId: 'SUB-2026-0184',
-      receivedAt: '2026-07-31T09:52:46.854Z',
-      status: 'unprocessed',
-      submittedAt: null,
-      text: 'Full body text line 1\nline 2'
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        submittedAt: null,
+        text: 'Full body text line 1\nline 2'
+      }
     })
 
     const { statusCode, payload } = await injectWithStubbedCredentials(
@@ -130,9 +139,11 @@ describe('#submissions pages', () => {
   })
 
   test('detail: unknown id renders standard 404 page', async () => {
-    submissionsApi.getSubmissionById.mockRejectedValue(
-      new submissionsApi.SubmissionsApiError('not-found')
-    )
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: false,
+      status: statusCodes.HTTP_STATUS_NOT_FOUND,
+      data: null
+    })
 
     const { statusCode, payload } = await injectWithStubbedCredentials(
       '/submissions/SUB-UNKNOWN'
@@ -144,7 +155,7 @@ describe('#submissions pages', () => {
 
   test('queue: backend unavailable shows friendly message', async () => {
     submissionsApi.listUnprocessedSubmissions.mockRejectedValue(
-      new submissionsApi.SubmissionsApiError('backend-unavailable')
+      new Error('backend-unavailable')
     )
 
     const { statusCode, payload } =
@@ -157,7 +168,7 @@ describe('#submissions pages', () => {
 
   test('detail: backend unavailable shows friendly message', async () => {
     submissionsApi.getSubmissionById.mockRejectedValue(
-      new submissionsApi.SubmissionsApiError('backend-unavailable')
+      new Error('backend-unavailable')
     )
 
     const { statusCode, payload } = await injectWithStubbedCredentials(
@@ -171,11 +182,15 @@ describe('#submissions pages', () => {
 
   test('unsafe html in text is escaped and inert', async () => {
     submissionsApi.getSubmissionById.mockResolvedValue({
-      submissionId: 'SUB-2026-XSS',
-      receivedAt: '2026-07-31T09:52:46.854Z',
-      status: 'unprocessed',
-      submittedAt: null,
-      text: '<script>alert(1)</script><b>hello</b>'
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-XSS',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        submittedAt: null,
+        text: '<script>alert(1)</script><b>hello</b>'
+      }
     })
 
     const { statusCode, payload } = await injectWithStubbedCredentials(
