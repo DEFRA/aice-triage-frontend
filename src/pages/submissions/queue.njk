@@ -1,0 +1,52 @@
+{% extends "common/layout.njk" %}
+
+{% set pageTitle = "Submissions waiting" %}
+{% set page = "submissions" %}
+
+{% block content %}
+  <div class="govuk-width-container govuk-!-margin-top-6">
+    <h1 class="govuk-heading-l">Submissions waiting</h1>
+
+    {% if serviceUnavailable %}
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          the triage service is unavailable
+        </strong>
+      </div>
+    {% elif rows | length == 0 %}
+      <p class="govuk-body">No submissions waiting</p>
+    {% else %}
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">Submission identifier</th>
+            <th scope="col" class="govuk-table__header">Received date</th>
+            <th scope="col" class="govuk-table__header">Preview</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for row in rows %}
+            {% set oneLinePreview = (row.textPreviewSource or "") | replace("\n", " ") | trim %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">
+                <a class="govuk-link" href="/submissions/{{ row.submissionId }}">
+                  {{ row.submissionId }}
+                </a>
+              </td>
+              <td class="govuk-table__cell">
+                <time datetime="{{ row.receivedAtIso }}" title="{{ row.receivedAtIso }}">
+                  {{ row.receivedAtDisplay }}
+                </time>
+              </td>
+              <td class="govuk-table__cell">
+                {{ oneLinePreview | truncate(140, true, "") }}{% if oneLinePreview | length > 140 %}...{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+{% endblock %}

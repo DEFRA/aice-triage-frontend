@@ -1,0 +1,31 @@
+{% extends "common/layout.njk" %}
+
+{% set page = "submissions" %}
+
+{% block content %}
+  <div class="govuk-width-container govuk-!-margin-top-6">
+    {% if serviceUnavailable %}
+      <h1 class="govuk-heading-l">Submission {{ submissionId }}</h1>
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          the triage service is unavailable
+        </strong>
+      </div>
+    {% else %}
+      <h1 class="govuk-heading-l">{{ submission.submissionId }}</h1>
+
+      <p class="govuk-body">
+        <strong>Received:</strong>
+        <time datetime="{{ submission.receivedAtIso }}" title="{{ submission.receivedAtIso }}">
+          {{ submission.receivedAtDisplay }}
+        </time>
+      </p>
+
+      <div class="govuk-inset-text" style="white-space: pre-wrap;">
+        {{ submission.text }}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
