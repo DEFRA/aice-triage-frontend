@@ -27,7 +27,16 @@ describe('#submissions pages', () => {
   function injectWithStubbedCredentials (url) {
     return server.inject({
       method: 'GET',
-      url
+      url,
+      auth: {
+        strategy: 'session',
+        credentials: {
+          isAuthenticated: true,
+          id: 'test-id',
+          displayName: 'Jane Smith',
+          email: 'jane.smith@defra.gov.uk'
+        }
+      }
     })
   }
   test('queue: populated list renders identifier, received date and preview', async () => {
