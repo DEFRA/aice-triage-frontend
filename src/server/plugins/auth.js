@@ -18,7 +18,7 @@ function _getBellOptions () {
     clientSecret: config.get('auth.clientSecret'),
     password: config.get('session.cookie.password'),
     isSecure: config.get('session.cookie.secure'),
-    location: (request) => `${config.get('auth.redirectHost')}/login/callback`,
+    location: (_request) => `${config.get('auth.redirectHost')}/login/callback`,
     scope: ['openid', 'profile', 'User.Read']
   }
 }
