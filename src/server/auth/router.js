@@ -17,11 +17,8 @@ const authRouter = {
           method: 'GET',
           path: '/logout',
           options: { auth: { mode: 'try', strategy: 'session' } },
-          async handler (request, h) {
-            const sessionId = request.auth.credentials?.id
-            if (sessionId) {
-              await request.server.app.cache.drop(sessionId)
-            }
+          handler (request, h) {
+            request.yar.reset()
             request.cookieAuth.clear()
             return h.redirect('/login')
           }

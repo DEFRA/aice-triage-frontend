@@ -22,8 +22,6 @@ import { getCacheEngine } from './plugins/session-cache/cache-engine.js'
 import { viewPlugin } from './plugins/views.js'
 import { pulse } from './plugins/pulse.js'
 
-import { authRouter } from './auth/router.js'
-
 /**
  * Creates and configures a Hapi.Server instance
  *
@@ -82,7 +80,6 @@ async function createServer () {
     pulse,
     sessionCache,
     auth,
-    authRouter,
     Scooter,
     contentSecurityPolicy,
     HapiInert,
@@ -92,12 +89,6 @@ async function createServer () {
   ]
 
   await server.register(plugins)
-
-  server.app.cache = server.cache({
-    cache: config.get('session.cache.name'),
-    segment: 'session',
-    expiresIn: config.get('session.cache.ttl')
-  })
 
   server.ext('onPreResponse', catchAll)
 

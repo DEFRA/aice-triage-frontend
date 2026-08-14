@@ -1,6 +1,7 @@
 import Jwt from '@hapi/jwt'
 
 import { createServer } from '../../../src/server/server.js'
+import { config } from '../../../src/config/config.js'
 
 function registerSessionCookieRoute (server) {
   server.route({
@@ -12,6 +13,18 @@ function registerSessionCookieRoute (server) {
   })
 }
 
+function registerYarSeedRoute (server) {
+  server.route({
+    method: 'GET',
+    path: '/__test-seed-yar-session',
+    options: { auth: false },
+    handler: (request, h) => {
+      request.yar.set('userAuth', JSON.parse(request.query.data))
+      return 'ok'
+    }
+  })
+}
+
 async function getSessionCookieHeader (server, sessionState) {
   const { headers } = await server.inject({
     method: 'GET',
@@ -19,6 +32,20 @@ async function getSessionCookieHeader (server, sessionState) {
   })
 
   return headers['set-cookie'][0].split(';')[0]
+}
+
+async function getYarSessionCookieHeader (server, sessionData) {
+  const { headers } = await server.inject({
+    method: 'GET',
+    url: `/__test-seed-yar-session?data=${encodeURIComponent(JSON.stringify(sessionData))}`
+  })
+
+  const yarCookieName = config.get('session.cache.name')
+  const yarCookie = headers['set-cookie'].find((cookie) =>
+    cookie.startsWith(`${yarCookieName}=`)
+  )
+
+  return yarCookie.split(';')[0]
 }
 
 describe('auth routes', () => {
@@ -109,6 +136,7 @@ describe('auth routes', () => {
   describe('session cookie validation', () => {
     beforeAll(() => {
       registerSessionCookieRoute(server)
+      registerYarSeedRoute(server)
 
       server.route({
         method: 'GET',
@@ -118,36 +146,35 @@ describe('auth routes', () => {
     })
 
     test('rejects a request when there is no cached session for the cookie', async () => {
-      const cookie = await getSessionCookieHeader(server, {
+      const authCookie = await getSessionCookieHeader(server, {
         id: 'unknown-session-id'
       })
 
       const { statusCode } = await server.inject({
         method: 'GET',
         url: '/__test-protected-route-2',
-        headers: { cookie }
+        headers: { cookie: authCookie }
       })
 
       expect(statusCode).not.toBe(200)
     })
 
     test('rejects a request when the cached token is invalid', async () => {
-      const sessionId = 'invalid-token-session'
-
-      await server.app.cache.set(sessionId, {
+      const yarCookie = await getYarSessionCookieHeader(server, {
         isAuthenticated: true,
-        id: sessionId,
+        id: 'invalid-token-session',
         displayName: 'Jane Smith',
         email: 'jane.smith@defra.gov.uk',
         token: 'not-a-valid-jwt'
       })
-
-      const cookie = await getSessionCookieHeader(server, { id: sessionId })
+      const authCookie = await getSessionCookieHeader(server, {
+        id: 'invalid-token-session'
+      })
 
       const { statusCode } = await server.inject({
         method: 'GET',
         url: '/__test-protected-route-2',
-        headers: { cookie }
+        headers: { cookie: `${yarCookie}; ${authCookie}` }
       })
 
       expect(statusCode).not.toBe(200)
@@ -160,20 +187,19 @@ describe('auth routes', () => {
         'a-test-secret-that-is-long-enough'
       )
 
-      await server.app.cache.set(sessionId, {
+      const yarCookie = await getYarSessionCookieHeader(server, {
         isAuthenticated: true,
         id: sessionId,
         displayName: 'Jane Smith',
         email: 'jane.smith@defra.gov.uk',
         token
       })
-
-      const cookie = await getSessionCookieHeader(server, { id: sessionId })
+      const authCookie = await getSessionCookieHeader(server, { id: sessionId })
 
       const { statusCode } = await server.inject({
         method: 'GET',
         url: '/__test-protected-route-2',
-        headers: { cookie }
+        headers: { cookie: `${yarCookie}; ${authCookie}` }
       })
 
       expect(statusCode).toBe(200)

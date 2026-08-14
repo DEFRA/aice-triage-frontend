@@ -1,5 +1,3 @@
-import { randomUUID as uuidv4 } from 'node:crypto'
-
 function buildSession (profile, token) {
   return {
     isAuthenticated: true,
@@ -15,10 +13,9 @@ const authController = {
     }
 
     const { profile, token } = request.auth.credentials
-    const sessionId = uuidv4()
 
-    await request.server.app.cache.set(sessionId, buildSession(profile, token))
-    request.cookieAuth.set({ id: sessionId })
+    await request.yar.set('userAuth', buildSession(profile, token))
+    request.cookieAuth.set({ id: request.yar.id })
 
     return h.redirect('/')
   }

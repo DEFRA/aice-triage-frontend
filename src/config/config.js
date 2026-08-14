@@ -132,11 +132,11 @@ const config = convict({
       default: true,
       env: 'AUTH_ENABLED'
     },
-    redirectUri: {
-      doc: 'Redirect Uri',
+    redirectHost: {
+      doc: 'Host used to build the OAuth redirect URI, e.g. http://localhost:3000',
       format: String,
       default: null,
-      env: 'AUTH_REDIRECT_URI'
+      env: 'AUTH_REDIRECT_HOST'
     },
     tenantId: {
       doc: 'Entra ID tenant ID',
