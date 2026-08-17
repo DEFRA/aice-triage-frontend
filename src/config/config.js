@@ -50,7 +50,7 @@ const config = convict({
   triageApiUrl: {
     doc: 'Base URL for the triage backend API',
     format: 'url',
-    default: 'http://localhost:3001',
+    default: null,
     env: 'TRIAGE_API_URL'
   },
   root: {
