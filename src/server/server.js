@@ -4,6 +4,7 @@ import { metrics } from '@defra/cdp-metrics'
 import { secureContext } from '@defra/hapi-secure-context'
 
 import Hapi from '@hapi/hapi'
+import HapiCookie from '@hapi/cookie'
 import HapiInert from '@hapi/inert'
 import Scooter from '@hapi/scooter'
 import HapiPino from 'hapi-pino'
@@ -79,14 +80,21 @@ async function createServer () {
     secureContext,
     pulse,
     sessionCache,
-    auth,
+    HapiCookie,
     Scooter,
     contentSecurityPolicy,
     HapiInert,
     serveStaticFiles,
     viewPlugin,
+    auth,
     router
   ]
+
+  server.app.cache = server.cache({
+    cache: config.get('session.cache.name'),
+    segment: 'auth-session',
+    expiresIn: config.get('session.cache.ttl')
+  })
 
   await server.register(plugins)
 

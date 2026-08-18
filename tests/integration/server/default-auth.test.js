@@ -1,4 +1,5 @@
 import { createServer } from '../../../src/server/server.js'
+import { loginAsDevUser } from '../helpers/login.js'
 
 describe('default auth protection', () => {
   let server
@@ -28,19 +29,13 @@ describe('default auth protection', () => {
     expect(statusCode).not.toBe(200)
   })
 
-  test('allows the same route when valid session credentials are injected', async () => {
+  test('allows the same route once logged in via the dev/local auth flow', async () => {
+    const cookie = await loginAsDevUser(server)
+
     const { statusCode } = await server.inject({
       method: 'GET',
       url: '/__test-protected-route',
-      auth: {
-        strategy: 'session',
-        credentials: {
-          isAuthenticated: true,
-          id: 'test-id',
-          displayName: 'Jane Smith',
-          email: 'jane.smith@defra.gov.uk'
-        }
-      }
+      headers: { cookie }
     })
 
     expect(statusCode).toBe(200)

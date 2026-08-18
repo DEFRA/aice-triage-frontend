@@ -126,36 +126,60 @@ const config = convict({
     env: 'ENABLE_SECURE_CONTEXT'
   },
   auth: {
-    enabled: {
-      doc: 'Enable Entra ID authentication (disable for local/test convenience)',
-      format: Boolean,
-      default: true,
-      env: 'AUTH_ENABLED'
+    provider: {
+      doc: 'Authentication provider to use',
+      format: isProduction ? ['entra'] : ['entra', 'local'],
+      default: 'entra',
+      env: 'AUTH_PROVIDER'
     },
-    redirectHost: {
-      doc: 'Host used to build the OAuth redirect URI, e.g. http://localhost:3000',
-      format: String,
-      default: null,
-      env: 'AUTH_REDIRECT_HOST'
-    },
-    tenantId: {
-      doc: 'Entra ID tenant ID',
-      format: String,
-      default: null,
-      env: 'AUTH_TENANT_ID'
-    },
-    clientId: {
-      doc: 'Entra ID app registration client ID',
-      format: String,
-      default: null,
-      env: 'AUTH_CLIENT_ID'
-    },
-    clientSecret: {
-      doc: 'Entra ID app registration client secret',
-      format: String,
-      default: null,
-      sensitive: true,
-      env: 'AUTH_CLIENT_SECRET'
+    entra: {
+      tenantId: {
+        doc: 'Entra ID (Azure AD) tenant ID (GUID) that issues tokens for this app registration',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_TENANT_ID'
+      },
+      clientId: {
+        doc: 'Entra ID application (client) ID registered for this portal',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_CLIENT_ID'
+      },
+      clientSecret: {
+        doc: 'Entra ID application client secret',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_CLIENT_SECRET',
+        sensitive: true
+      },
+      authorityHost: {
+        doc: 'Entra authority host used to build the authorize/token/JWKS endpoints',
+        format: String,
+        default: 'https://login.microsoftonline.com',
+        env: 'ENTRA_AUTHORITY_HOST'
+      },
+      redirectHost: {
+        doc: 'Entra redirect host used to build the redirect URI for the OIDC flow, e.g. http://localhost:3000',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_REDIRECT_HOST'
+      },
+      useRefreshTokens: {
+        doc: 'Toggle whether to refresh tokens on expiration. If false, the user will be logged out when the access token expires.',
+        format: Boolean,
+        default: false,
+        env: 'ENTRA_USE_REFRESH_TOKENS'
+      },
+      refreshTokenAquisitionTimeout: {
+        doc: 'Timeout in milliseconds for acquiring a new access token using the refresh token.',
+        format: Number,
+        default: 5000,
+        env: 'ENTRA_REFRESH_TOKEN_ACQUISITION_TIMEOUT'
+      }
     }
   },
   session: {

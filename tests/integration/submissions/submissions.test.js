@@ -2,6 +2,7 @@ import { constants as statusCodes } from 'node:http2'
 
 import { createServer } from '../../../src/server/server.js'
 import * as submissionsApi from '../../../src/pages/submissions/api.js'
+import { loginAsDevUser } from '../helpers/login.js'
 
 vi.mock('../../../src/pages/submissions/api.js', () => ({
   listUnprocessedSubmissions: vi.fn(),
@@ -24,19 +25,13 @@ describe('#submissions pages', () => {
     vi.clearAllMocks()
   })
 
-  function injectWithStubbedCredentials (url) {
+  async function injectWithStubbedCredentials (url) {
+    const cookie = await loginAsDevUser(server)
+
     return server.inject({
       method: 'GET',
       url,
-      auth: {
-        strategy: 'session',
-        credentials: {
-          isAuthenticated: true,
-          id: 'test-id',
-          displayName: 'Jane Smith',
-          email: 'jane.smith@defra.gov.uk'
-        }
-      }
+      headers: { cookie }
     })
   }
   test('queue: populated list renders identifier, received date and preview', async () => {

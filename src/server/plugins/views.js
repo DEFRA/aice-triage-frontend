@@ -61,7 +61,8 @@ const viewPlugin = {
       // Blankie generates nonces when configured with generateNonces: true
       // Returns { script, style } when enabled, undefined otherwise
       cspNonce: request?.plugins?.blankie?.nonces,
-      user: request?.auth?.credentials
+      isAuthenticated: Boolean(request?.auth?.isAuthenticated),
+      userDisplayName: request?.auth?.credentials?.profile?.displayName ?? null
     })
   }
 }
