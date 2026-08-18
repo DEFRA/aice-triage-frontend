@@ -20,6 +20,8 @@
       {% if user %}
         <span class="defra-header__user">{{ user.displayName }}</span>
         <a href="/logout" class="defra-header__link">Sign out</a>
+      {% else %}
+        <a href="/login" class="defra-header__link">Sign in</a>
       {% endif %}
     </div>
     </div>

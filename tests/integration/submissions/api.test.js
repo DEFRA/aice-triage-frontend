@@ -86,4 +86,16 @@ describe('#submissions api', () => {
       await expect(getSubmissionById('SUB-1')).rejects.toThrow()
     })
   })
+
+  test('Should throw a clear error when TRIAGE_API_URL is not configured', async () => {
+    const configSpy = vi
+      .spyOn(config, 'get')
+      .mockImplementation((key) => (key === 'triageApiUrl' ? null : undefined))
+
+    await expect(listUnprocessedSubmissions()).rejects.toThrow(
+      'TRIAGE_API_URL is not configured'
+    )
+
+    configSpy.mockRestore()
+  })
 })
