@@ -74,7 +74,7 @@ async function logout (request, h) {
   if (request.auth.isAuthenticated) {
     const { sessionId } = request.auth.credentials
 
-    await request.server.app.cache.drop(`auth-session:${sessionId}`)
+    await request.server.app.cache.drop(`auth-session:${String(sessionId)}`)
     request.cookieAuth.clear()
   }
 

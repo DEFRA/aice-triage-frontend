@@ -1,5 +1,25 @@
+import crypto from 'node:crypto'
+
 import Jwt from '@hapi/jwt'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+
+const { mockGetSigningKey } = vi.hoisted(() => ({
+  mockGetSigningKey: vi.fn()
+}))
+
+vi.mock('jwks-rsa', () => ({
+  default: vi.fn(() => ({
+    getSigningKey: mockGetSigningKey
+  }))
+}))
+
+function generateRsaKeyPair () {
+  return crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+  })
+}
 
 function buildMockServer () {
   return {
@@ -85,6 +105,110 @@ describe('#auth plugin', () => {
         'verifyEntraToken',
         expect.any(Function)
       )
+    })
+
+    test('the wrapped Bell profile hook stashes the id_token and populates credentials.profile', async () => {
+      const auth = await getAuthPlugin()
+      const mockServer = buildMockServer()
+
+      await auth.plugin.register(mockServer)
+
+      const options = getStrategyOptions(mockServer, 'entra')
+      const credentials = {}
+      const params = { id_token: 'raw-id-token-value' }
+      const get = vi.fn().mockResolvedValue({
+        id: 'user-1',
+        displayName: 'Jane Smith',
+        userPrincipalName: 'jane.smith@example.com'
+      })
+
+      await options.provider.profile(credentials, params, get)
+
+      expect(credentials.idToken).toBe('raw-id-token-value')
+      expect(credentials.profile).toMatchObject({
+        id: 'user-1',
+        displayName: 'Jane Smith',
+        email: 'jane.smith@example.com'
+      })
+    })
+
+    test('builds the full redirect_uri from the configured redirect host', async () => {
+      const auth = await getAuthPlugin()
+      const mockServer = buildMockServer()
+
+      await auth.plugin.register(mockServer)
+
+      const options = getStrategyOptions(mockServer, 'entra')
+
+      expect(options.location()).toBe('http://localhost:3000/login/callback')
+    })
+
+    describe('verifyEntraToken (JWKS verification)', () => {
+      afterEach(() => {
+        mockGetSigningKey.mockReset()
+      })
+
+      test('verifies the token signature and payload against the JWKS client and returns the decoded payload', async () => {
+        const { publicKey, privateKey } = generateRsaKeyPair()
+
+        mockGetSigningKey.mockResolvedValue({
+          getPublicKey: () => publicKey
+        })
+
+        const auth = await getAuthPlugin()
+        const mockServer = buildMockServer()
+
+        await auth.plugin.register(mockServer)
+
+        const [, , verifyEntraToken] = mockServer.decorate.mock.calls.find(
+          ([type, name]) => type === 'server' && name === 'verifyEntraToken'
+        )
+
+        const token = Jwt.token.generate(
+          {
+            sub: 'user-123',
+            aud: 'test-client-id',
+            iss: 'https://login.microsoftonline.com/test-tenant-id/v2.0'
+          },
+          { key: privateKey, algorithm: 'RS256' },
+          { header: { kid: 'test-kid' } }
+        )
+
+        const payload = await verifyEntraToken(token)
+
+        expect(mockGetSigningKey).toHaveBeenCalledWith('test-kid')
+        expect(payload).toMatchObject({ sub: 'user-123' })
+      })
+
+      test('rejects a token whose signature does not match the JWKS public key', async () => {
+        const { privateKey } = generateRsaKeyPair()
+        const { publicKey: wrongPublicKey } = generateRsaKeyPair()
+
+        mockGetSigningKey.mockResolvedValue({
+          getPublicKey: () => wrongPublicKey
+        })
+
+        const auth = await getAuthPlugin()
+        const mockServer = buildMockServer()
+
+        await auth.plugin.register(mockServer)
+
+        const [, , verifyEntraToken] = mockServer.decorate.mock.calls.find(
+          ([type, name]) => type === 'server' && name === 'verifyEntraToken'
+        )
+
+        const token = Jwt.token.generate(
+          {
+            sub: 'user-123',
+            aud: 'test-client-id',
+            iss: 'https://login.microsoftonline.com/test-tenant-id/v2.0'
+          },
+          { key: privateKey, algorithm: 'RS256' },
+          { header: { kid: 'test-kid' } }
+        )
+
+        await expect(verifyEntraToken(token)).rejects.toThrow()
+      })
     })
   })
 
