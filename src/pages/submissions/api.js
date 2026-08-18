@@ -21,13 +21,6 @@ class SubmissionsApiError extends Error {
 
 async function request (path, { expected = [] } = {}) {
   const baseUrl = config.get('triageApiUrl')
-
-  if (!baseUrl) {
-    throw new Error(
-      'TRIAGE_API_URL is not configured, cannot call the submissions API'
-    )
-  }
-
   const url = new URL(path, baseUrl).toString()
 
   const response = await fetch(url, {

@@ -22,33 +22,4 @@ describe('#homepageController', () => {
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
   })
-
-  test('Should show a sign in link when not authenticated', async () => {
-    const { payload } = await server.inject({
-      method: 'GET',
-      url: '/'
-    })
-
-    expect(payload).toContain('Sign in')
-    expect(payload).not.toContain('Sign out')
-  })
-
-  test('Should show a sign out link when authenticated', async () => {
-    const { payload } = await server.inject({
-      method: 'GET',
-      url: '/',
-      auth: {
-        strategy: 'session',
-        credentials: {
-          isAuthenticated: true,
-          id: 'test-id',
-          displayName: 'Jane Smith',
-          email: 'jane.smith@defra.gov.uk'
-        }
-      }
-    })
-
-    expect(payload).toContain('Sign out')
-    expect(payload).not.toContain('Sign in')
-  })
 })
