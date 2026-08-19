@@ -72,9 +72,10 @@ async function handleLoginCallback (request, h) {
  */
 async function logout (request, h) {
   if (request.auth.isAuthenticated) {
+    /** @type {{ sessionId: string }} */
     const { sessionId } = request.auth.credentials
 
-    await request.server.app.cache.drop(`auth-session:${String(sessionId)}`)
+    await request.server.app.cache.drop(`auth-session:${sessionId}`)
     request.cookieAuth.clear()
   }
 
