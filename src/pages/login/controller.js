@@ -49,7 +49,7 @@ async function handleLoginCallback (request, h) {
     : _getDevSession()
 
   const sessionId = uuidv4()
-  const storedSessionId = `auth-session:${sessionId}`
+  const storedSessionId = `auth-session:${String(sessionId)}`
 
   await request.server.app.cache.set(storedSessionId, { profile, token, refreshToken })
 
