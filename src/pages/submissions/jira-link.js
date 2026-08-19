@@ -29,7 +29,7 @@ function formatRoutingRecommendation (routingRecommendation, patternCited) {
   }
   return (
     ROUTING_LABELS[routingRecommendation] ??
-    routingRecommendation.replace(/_/g, ' ')
+    routingRecommendation.replaceAll('_', ' ')
   )
 }
 
@@ -72,9 +72,9 @@ function buildJiraDescription (result, detailUrl) {
   const footer = buildFooter(detailUrl)
 
   if (result.kind !== 'opportunity') {
-    const body = `${KIND_SUMMARY_LABELS[result.kind]}\n\n${result.reason}`
+    const summaryBody = `${KIND_SUMMARY_LABELS[result.kind]}\n\n${result.reason}`
 
-    return truncateDescription(body, footer)
+    return truncateDescription(summaryBody, footer)
   }
 
   const { scoring } = result
