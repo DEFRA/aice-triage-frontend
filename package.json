@@ -50,7 +50,7 @@
     "flatted": "3.4.2",
     "govuk-frontend": "6.2.0",
     "hapi-pino": "13.0.0",
-    "hapi-pulse": "3.0.1",
+    "hapi-pulse": "4.0.0",
     "ioredis": "5.11.1",
     "joi": "18.2.1",
     "jwks-rsa": "4.1.0",
