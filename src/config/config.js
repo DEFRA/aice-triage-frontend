@@ -53,6 +53,29 @@ const config = convict({
     default: null,
     env: 'TRIAGE_API_URL'
   },
+  jira: {
+    baseUrl: {
+      doc: 'Base URL for the Jira instance used to build create-issue links',
+      format: 'url',
+      default: null,
+      nullable: !isProduction,
+      env: 'JIRA_BASE_URL'
+    },
+    projectId: {
+      doc: 'Jira numeric project ID used in create-issue links (not the project key)',
+      format: String,
+      default: null,
+      nullable: !isProduction,
+      env: 'JIRA_PROJECT_ID'
+    },
+    issueTypeId: {
+      doc: 'Jira numeric issue type ID used in create-issue links',
+      format: String,
+      default: null,
+      nullable: !isProduction,
+      env: 'JIRA_ISSUE_TYPE_ID'
+    }
+  },
   root: {
     doc: 'Project root',
     format: String,

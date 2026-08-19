@@ -10,20 +10,21 @@ class SubmissionsApiError extends Error {
     this.statusCode = statusCode
   }
 
-  static fromResponse (path, response) {
+  static fromResponse (method, path, response) {
     const message =
-      `Submissions API GET ${path} ` +
+      `Submissions API ${method} ${path} ` +
       `failed: ${response.status} ${response.statusText}`
 
     return new SubmissionsApiError(message, response.status)
   }
 }
 
-async function request (path, { expected = [] } = {}) {
+async function request (path, { method = 'GET', expected = [] } = {}) {
   const baseUrl = config.get('triageApiUrl')
   const url = new URL(path, baseUrl).toString()
 
   const response = await fetch(url, {
+    method,
     signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS)
   })
 
@@ -35,7 +36,7 @@ async function request (path, { expected = [] } = {}) {
     return { ok: false, status: response.status, data: null }
   }
 
-  throw SubmissionsApiError.fromResponse(path, response)
+  throw SubmissionsApiError.fromResponse(method, path, response)
 }
 
 async function listUnprocessedSubmissions () {
@@ -48,4 +49,16 @@ async function getSubmissionById (submissionId) {
   })
 }
 
-export { listUnprocessedSubmissions, getSubmissionById, SubmissionsApiError }
+async function scoreSubmission (submissionId) {
+  return request(`/submissions/${submissionId}/score`, {
+    method: 'POST',
+    expected: [statusCodes.HTTP_STATUS_CONFLICT]
+  })
+}
+
+export {
+  listUnprocessedSubmissions,
+  getSubmissionById,
+  scoreSubmission,
+  SubmissionsApiError
+}
