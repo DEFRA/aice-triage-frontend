@@ -121,6 +121,56 @@ describe('views plugin', () => {
 
       expect(ctx.cspNonce).toBeUndefined()
     })
+
+    test('Should expose isAuthenticated and userDisplayName when signed in', async () => {
+      const { viewPlugin } =
+        await import('../../../../src/server/plugins/views.js')
+
+      const mockRequest = {
+        auth: {
+          isAuthenticated: true,
+          credentials: { profile: { displayName: 'Jane Smith' } }
+        }
+      }
+
+      const ctx = viewPlugin.options.context(mockRequest)
+
+      expect(ctx.isAuthenticated).toBe(true)
+      expect(ctx.userDisplayName).toBe('Jane Smith')
+    })
+
+    test('Should expose isAuthenticated as false and userDisplayName as null when signed out', async () => {
+      const { viewPlugin } =
+        await import('../../../../src/server/plugins/views.js')
+
+      const mockRequest = { auth: { isAuthenticated: false } }
+
+      const ctx = viewPlugin.options.context(mockRequest)
+
+      expect(ctx.isAuthenticated).toBe(false)
+      expect(ctx.userDisplayName).toBeNull()
+    })
+
+    test('Should default isAuthenticated to false and userDisplayName to null when request.auth is missing', async () => {
+      const { viewPlugin } =
+        await import('../../../../src/server/plugins/views.js')
+
+      const ctx = viewPlugin.options.context()
+
+      expect(ctx.isAuthenticated).toBe(false)
+      expect(ctx.userDisplayName).toBeNull()
+    })
+
+    test('Should default userDisplayName to null when authenticated but profile is missing', async () => {
+      const { viewPlugin } =
+        await import('../../../../src/server/plugins/views.js')
+
+      const mockRequest = { auth: { isAuthenticated: true, credentials: {} } }
+
+      const ctx = viewPlugin.options.context(mockRequest)
+
+      expect(ctx.userDisplayName).toBeNull()
+    })
   })
 
   describe('Vite manifest handling', () => {

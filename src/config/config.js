@@ -50,7 +50,7 @@ const config = convict({
   triageApiUrl: {
     doc: 'Base URL for the triage backend API',
     format: 'url',
-    default: 'http://localhost:3001',
+    default: null,
     env: 'TRIAGE_API_URL'
   },
   root: {
@@ -125,6 +125,63 @@ const config = convict({
     default: isProduction,
     env: 'ENABLE_SECURE_CONTEXT'
   },
+  auth: {
+    provider: {
+      doc: 'Authentication provider to use',
+      format: isProduction ? ['entra'] : ['entra', 'local'],
+      default: 'entra',
+      env: 'AUTH_PROVIDER'
+    },
+    entra: {
+      tenantId: {
+        doc: 'Entra ID (Azure AD) tenant ID (GUID) that issues tokens for this app registration',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_TENANT_ID'
+      },
+      clientId: {
+        doc: 'Entra ID application (client) ID registered for this portal',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_CLIENT_ID'
+      },
+      clientSecret: {
+        doc: 'Entra ID application client secret',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_CLIENT_SECRET',
+        sensitive: true
+      },
+      authorityHost: {
+        doc: 'Entra authority host used to build the authorize/token/JWKS endpoints',
+        format: String,
+        default: 'https://login.microsoftonline.com',
+        env: 'ENTRA_AUTHORITY_HOST'
+      },
+      redirectHost: {
+        doc: 'Entra redirect host used to build the redirect URI for the OIDC flow, e.g. http://localhost:3000',
+        format: String,
+        default: null,
+        nullable: !isProduction,
+        env: 'ENTRA_REDIRECT_HOST'
+      },
+      useRefreshTokens: {
+        doc: 'Toggle whether to refresh tokens on expiration. If false, the user will be logged out when the access token expires.',
+        format: Boolean,
+        default: false,
+        env: 'ENTRA_USE_REFRESH_TOKENS'
+      },
+      refreshTokenAquisitionTimeout: {
+        doc: 'Timeout in milliseconds for acquiring a new access token using the refresh token.',
+        format: Number,
+        default: 5000,
+        env: 'ENTRA_REFRESH_TOKEN_ACQUISITION_TIMEOUT'
+      }
+    }
+  },
   session: {
     cache: {
       engine: {
@@ -178,14 +235,16 @@ const config = convict({
     username: {
       doc: 'Redis cache username',
       format: String,
-      default: '',
+      default: null,
+      nullable: process.env.NODE_ENV !== 'production',
       env: 'REDIS_USERNAME'
     },
     password: {
       doc: 'Redis cache password',
       format: '*',
-      default: '',
       sensitive: true,
+      default: null,
+      nullable: process.env.NODE_ENV !== 'production',
       env: 'REDIS_PASSWORD'
     },
     keyPrefix: {

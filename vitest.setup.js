@@ -1,0 +1,6 @@
+process.env.AUTH_PROVIDER = 'local'
+process.env.ENTRA_TENANT_ID = 'test-tenant-id'
+process.env.ENTRA_CLIENT_ID = 'test-client-id'
+process.env.ENTRA_CLIENT_SECRET = 'test-client-secret'
+process.env.ENTRA_REDIRECT_HOST = 'http://localhost:3000'
+process.env.TRIAGE_API_URL = 'http://localhost:3001'

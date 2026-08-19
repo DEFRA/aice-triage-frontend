@@ -17,13 +17,12 @@ function buildRedisClient (redisConfig) {
   const host = redisConfig.host
   let redisClient
 
-  const credentials =
-    redisConfig.username === ''
-      ? {}
-      : {
-          username: redisConfig.username,
-          password: redisConfig.password
-        }
+  const credentials = !redisConfig.username
+    ? {}
+    : {
+        username: redisConfig.username,
+        password: redisConfig.password
+      }
 
   const tls = redisConfig.useTLS ? { tls: {} } : {}
 
