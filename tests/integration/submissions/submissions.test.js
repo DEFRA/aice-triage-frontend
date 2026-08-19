@@ -6,7 +6,8 @@ import { loginAsDevUser } from '../helpers/login.js'
 
 vi.mock('../../../src/pages/submissions/api.js', () => ({
   listUnprocessedSubmissions: vi.fn(),
-  getSubmissionById: vi.fn()
+  getSubmissionById: vi.fn(),
+  scoreSubmission: vi.fn()
 }))
 
 describe('#submissions pages', () => {
@@ -34,6 +35,17 @@ describe('#submissions pages', () => {
       headers: { cookie }
     })
   }
+
+  async function postWithStubbedCredentials (url) {
+    const cookie = await loginAsDevUser(server)
+
+    return server.inject({
+      method: 'POST',
+      url,
+      headers: { cookie }
+    })
+  }
+
   test('queue: populated list renders identifier, received date and preview', async () => {
     submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
       ok: true,
@@ -207,5 +219,392 @@ describe('#submissions pages', () => {
     expect(payload).toContain(
       '&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;hello&lt;/b&gt;'
     )
+  })
+  test('unscored submission shows the Score button, no result', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        text: 'We spend two days a week reading applications by hand'
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('Score this submission')
+    expect(payload).not.toContain('This is an access request')
+    expect(payload).not.toContain('This is an enquiry')
+    expect(payload).not.toContain('AI opportunity')
+  })
+
+  test('pressing the button triggers scoring and redirects to the detail page', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        id: 'SUB-2026-0184',
+        kind: 'opportunity',
+        reason: 'Describes an AI use case to triage.',
+        scoring: null
+      }
+    })
+
+    const response = await postWithStubbedCredentials(
+      '/submissions/SUB-2026-0184/score'
+    )
+
+    expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
+    expect(response.headers.location).toBe('/submissions/SUB-2026-0184')
+  })
+
+  test('AC3: a 409 from the backend redirects with an in-flight flag, not an error', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: false,
+      status: statusCodes.HTTP_STATUS_CONFLICT,
+      data: null
+    })
+
+    const response = await postWithStubbedCredentials(
+      '/submissions/SUB-2026-0184/score'
+    )
+
+    expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
+    expect(response.headers.location).toBe(
+      '/submissions/SUB-2026-0184?scoring=in-flight'
+    )
+  })
+
+  test('the in-flight flag renders a "refresh shortly" message, no button', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        text: 'We spend two days a week reading applications by hand'
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184?scoring=in-flight'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('Scoring is already running, refresh shortly')
+    expect(payload).not.toContain('Score this submission')
+  })
+
+  test('revisiting a scored submission shows the stored result, no button', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'We spend two days a week reading applications by hand',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'enquiry',
+          reason: 'Asks a question with no use case in it.',
+          scoring: null
+        }
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).not.toContain('Score this submission')
+  })
+
+  function buildOpportunityScoring (overrides = {}) {
+    const criterion = (rag, explanation, missingEvidence = false) => ({
+      rag,
+      rubric_band_cited: `${rag} band`,
+      evidence_quoted: missingEvidence ? '' : 'the words from the submission',
+      explanation,
+      missing_evidence: missingEvidence
+    })
+
+    return {
+      criteria: {
+        business_value: criterion(
+          'amber',
+          'real problem stated, no quantified AI benefit.'
+        ),
+        user_impact: criterion(
+          'green',
+          'names the caseworkers affected and the time lost today.'
+        ),
+        data_readiness: criterion(
+          'amber',
+          'nothing said about data quality.',
+          true
+        ),
+        process_stability: criterion(
+          'green',
+          'the process has not changed in two years.'
+        ),
+        ai_fit: criterion(
+          'green',
+          'classification of free text, a well-served pattern.'
+        ),
+        risk: criterion(
+          'amber',
+          'decisions affect applicants, so a human check is needed.'
+        ),
+        scalability: criterion(
+          'amber',
+          'one team today, no stated route to others.'
+        ),
+        cross_defra_value: criterion(
+          'green',
+          'applies to EA & Natural England too.'
+        )
+      },
+      routing_recommendation: 'hands_on_session',
+      pattern_cited: '',
+      flags: {
+        governance_required: false,
+        low_confidence: false,
+        access_request: false
+      },
+      rubric_version: '2026-07-29',
+      ...overrides
+    }
+  }
+
+  test('an opportunity shows all eight criteria, tags, explanations, missing evidence, audit fields and routing', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'We spend two days a week reading applications by hand',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'opportunity',
+          reason: 'Describes an AI use case to triage.',
+          scoring: buildOpportunityScoring()
+        }
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    ;[
+      'Business value',
+      'User impact',
+      'Data readiness',
+      'Process stability',
+      'AI fit',
+      'Risk',
+      'Scalability',
+      'Cross-Defra value'
+    ].forEach((label) => expect(payload).toContain(label))
+
+    expect(payload).toContain('govuk-tag--yellow')
+    expect(payload).toContain('real problem stated, no quantified AI benefit.')
+    expect(payload).toContain('Missing evidence')
+    expect(payload).toContain('the words from the submission')
+    expect(payload).toContain('amber band')
+    expect(payload).toContain('hands-on session')
+    expect(payload).toContain('2026-07-29')
+  })
+
+  test('names the pattern when routing is recommended_pattern', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'irrelevant',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'opportunity',
+          reason: 'Describes an AI use case to triage.',
+          scoring: buildOpportunityScoring({
+            routing_recommendation: 'recommended_pattern',
+            pattern_cited: 'Document classification'
+          })
+        }
+      }
+    })
+
+    const { payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(payload).toContain('Document classification')
+  })
+
+  test('an access_request shows its own classification and reason, no grid', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0200',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'irrelevant',
+        result: {
+          id: 'SUB-2026-0200',
+          kind: 'access_request',
+          reason: 'The real ask is tool licences for named people.',
+          scoring: null
+        }
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0200'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('This is an access request')
+    expect(payload).toContain('The real ask is tool licences for named people.')
+    expect(payload).not.toContain('govuk-table')
+    expect(payload).not.toContain('This is an enquiry')
+  })
+
+  test('an enquiry shows its own classification and reason, no grid', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0201',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'irrelevant',
+        result: {
+          id: 'SUB-2026-0201',
+          kind: 'enquiry',
+          reason: 'Asks a question with no use case in it.',
+          scoring: null
+        }
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0201'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('This is an enquiry')
+    expect(payload).toContain('Asks a question with no use case in it.')
+    expect(payload).not.toContain('govuk-table')
+    expect(payload).not.toContain('This is an access request')
+  })
+
+  test('governance_required and low_confidence render visible notices when true', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'irrelevant',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'opportunity',
+          reason: 'Describes an AI use case to triage.',
+          scoring: buildOpportunityScoring({
+            flags: {
+              governance_required: true,
+              low_confidence: true,
+              access_request: false
+            }
+          })
+        }
+      }
+    })
+
+    const { payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(payload).toContain('Governance required')
+    expect(payload).toContain('Low confidence')
+  })
+
+  test('flags produce no notice when false', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'irrelevant',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'opportunity',
+          reason: 'Describes an AI use case to triage.',
+          scoring: buildOpportunityScoring()
+        }
+      }
+    })
+
+    const { payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(payload).not.toContain('Governance required')
+    expect(payload).not.toContain('Low confidence')
+  })
+
+  test('the Jira link is present, opens in a new tab, and every value is encoded', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'irrelevant',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'opportunity',
+          reason: 'Describes an AI use case to triage.',
+          scoring: buildOpportunityScoring()
+        }
+      }
+    })
+
+    const { payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(payload).toContain('target="_blank"')
+    expect(payload).toContain('rel="noopener noreferrer"')
+    expect(payload).toContain('pid=10042')
+    expect(payload).toContain('issuetype=10005')
+    expect(payload).toContain('%26') // encoded & from "EA & Natural England"
   })
 })

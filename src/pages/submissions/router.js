@@ -10,6 +10,11 @@ const routes = [
     method: 'GET',
     path: '/submissions/{submissionId}',
     handler: submissionsController.getSubmissionDetail
+  },
+  {
+    method: 'POST',
+    path: '/submissions/{submissionId}/score',
+    handler: submissionsController.postScoreSubmission
   }
 ]
 

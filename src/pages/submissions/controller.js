@@ -1,13 +1,29 @@
 import Boom from '@hapi/boom'
 
 import { statusCodes } from '../../constants/status-codes.js'
-import { listUnprocessedSubmissions, getSubmissionById } from './api.js'
+import { config } from '../../config/config.js'
+import {
+  listUnprocessedSubmissions,
+  getSubmissionById,
+  scoreSubmission
+} from './api.js'
+import {
+  buildJiraLink,
+  formatRoutingRecommendation,
+  getCriteriaRows
+} from './jira-link.js'
 
 const govUkDateFormatter = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',
   year: 'numeric'
 })
+
+const RAG_TAG_CLASS = {
+  red: 'govuk-tag--red',
+  amber: 'govuk-tag--yellow',
+  green: 'govuk-tag--green'
+}
 
 function formatGovUkDate (isoDateString) {
   return govUkDateFormatter.format(new Date(isoDateString))
@@ -22,6 +38,18 @@ function mapQueueRows (submissions) {
       receivedAtDisplay: formatGovUkDate(submission.receivedAt),
       textPreviewSource: submission.text ?? ''
     }))
+}
+
+function buildJiraConfig () {
+  const baseUrl = config.get('jira.baseUrl')
+  const projectId = config.get('jira.projectId')
+  const issueTypeId = config.get('jira.issueTypeId')
+
+  if (!baseUrl || !projectId || !issueTypeId) {
+    return null
+  }
+
+  return { baseUrl, projectId, issueTypeId }
 }
 
 async function getSubmissionsQueue (_request, h) {
@@ -52,6 +80,7 @@ async function getSubmissionsQueue (_request, h) {
 
 async function getSubmissionDetail (request, h) {
   const { submissionId } = request.params
+  const scoringInFlight = request.query.scoring === 'in-flight'
   let result
 
   try {
@@ -73,20 +102,75 @@ async function getSubmissionDetail (request, h) {
   }
 
   const submission = result.data
+  const isScored = submission.status === 'scored'
+  const scoringResult = isScored ? submission.result : null
+  const isOpportunity = scoringResult?.kind === 'opportunity'
+
+  const criteriaRows = isOpportunity
+    ? getCriteriaRows(scoringResult.scoring.criteria).map((row) => ({
+      ...row,
+      tagClass: RAG_TAG_CLASS[row.rag] ?? 'govuk-tag--grey'
+    }))
+    : null
+
+  const routingRecommendationText = isOpportunity
+    ? formatRoutingRecommendation(
+      scoringResult.scoring.routing_recommendation,
+      scoringResult.scoring.pattern_cited
+    )
+    : null
+
+  let jiraLink = null
+  if (isScored) {
+    const jiraConfig = buildJiraConfig()
+
+    if (jiraConfig) {
+      const detailUrl = `${request.server.info.uri}/submissions/${submission.submissionId}`
+
+      jiraLink = buildJiraLink(scoringResult, { ...jiraConfig, detailUrl })
+    }
+  }
 
   return h
     .view('submissions/detail.njk', {
       pageTitle: `Submission ${submission.submissionId}`,
       page: 'submissions',
       serviceUnavailable: false,
+      scoringInFlight,
       submission: {
         submissionId: submission.submissionId,
         receivedAtIso: submission.receivedAt,
         receivedAtDisplay: formatGovUkDate(submission.receivedAt),
-        text: submission.text ?? ''
-      }
+        text: submission.text ?? '',
+        status: submission.status,
+        scoredAtIso: submission.scoredAt ?? null,
+        scoredAtDisplay: submission.scoredAt
+          ? formatGovUkDate(submission.scoredAt)
+          : null,
+        result: scoringResult
+      },
+      criteriaRows,
+      routingRecommendationText,
+      jiraLink
     })
     .code(statusCodes.HTTP_STATUS_OK)
 }
 
-export { getSubmissionsQueue, getSubmissionDetail }
+async function postScoreSubmission (request, h) {
+  const { submissionId } = request.params
+  let result
+
+  try {
+    result = await scoreSubmission(submissionId)
+  } catch {
+    throw Boom.badGateway()
+  }
+
+  if (!result.ok && result.status === statusCodes.HTTP_STATUS_CONFLICT) {
+    return h.redirect(`/submissions/${submissionId}?scoring=in-flight`)
+  }
+
+  return h.redirect(`/submissions/${submissionId}`)
+}
+
+export { getSubmissionsQueue, getSubmissionDetail, postScoreSubmission }

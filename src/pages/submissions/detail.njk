@@ -26,6 +26,115 @@
       <div class="govuk-inset-text" style="white-space: pre-wrap;">
         {{ submission.text }}
       </div>
+
+      {% if submission.status != 'scored' %}
+        {% if scoringInFlight %}
+          <div class="govuk-warning-text">
+            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+            <strong class="govuk-warning-text__text">
+              <span class="govuk-visually-hidden">Warning</span>
+              Scoring is already running, refresh shortly.
+            </strong>
+          </div>
+        {% else %}
+          <form method="post" action="/submissions/{{ submission.submissionId }}/score">
+            <button type="submit" class="govuk-button" data-module="govuk-button">
+              Score this submission
+            </button>
+          </form>
+        {% endif %}
+
+      {% elif submission.result.kind == 'access_request' %}
+        <h2 class="govuk-heading-m">This is an access request</h2>
+        <p class="govuk-body">{{ submission.result.reason }}</p>
+
+      {% elif submission.result.kind == 'enquiry' %}
+        <h2 class="govuk-heading-m">This is an enquiry</h2>
+        <p class="govuk-body">{{ submission.result.reason }}</p>
+
+      {% elif submission.result.kind == 'opportunity' %}
+        <h2 class="govuk-heading-m">AI opportunity</h2>
+        <p class="govuk-body">{{ submission.result.reason }}</p>
+
+        {% if submission.result.scoring.flags.governance_required %}
+          <div class="govuk-warning-text">
+            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+            <strong class="govuk-warning-text__text">
+              <span class="govuk-visually-hidden">Warning</span>
+              Governance required — policy or approvals are implicated by this use case.
+            </strong>
+          </div>
+        {% endif %}
+        {% if submission.result.scoring.flags.low_confidence %}
+          <div class="govuk-warning-text">
+            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+            <strong class="govuk-warning-text__text">
+              <span class="govuk-visually-hidden">Warning</span>
+              Low confidence — this score is too uncertain to act on without a human reading it.
+            </strong>
+          </div>
+        {% endif %}
+
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">Criterion</th>
+              <th scope="col" class="govuk-table__header">Rating</th>
+              <th scope="col" class="govuk-table__header">Explanation</th>
+              <th scope="col" class="govuk-table__header">Audit</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for criterion in criteriaRows %}
+              <tr class="govuk-table__row">
+                <th scope="row" class="govuk-table__header">{{ criterion.label }}</th>
+                <td class="govuk-table__cell">
+                  <strong class="govuk-tag {{ criterion.tagClass }}">{{ criterion.rag }}</strong>
+                  {% if criterion.missing_evidence %}
+                    <br><span class="govuk-body-s">Missing evidence</span>
+                  {% endif %}
+                </td>
+                <td class="govuk-table__cell">{{ criterion.explanation }}</td>
+                <td class="govuk-table__cell">
+                  <details class="govuk-details" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                      <span class="govuk-details__summary-text">Rubric band and evidence</span>
+                    </summary>
+                    <div class="govuk-details__text">
+                      <p class="govuk-body"><strong>Rubric band:</strong> {{ criterion.rubric_band_cited }}</p>
+                      <p class="govuk-body">
+                      <strong>Evidence quoted:</strong>
+                        {% if criterion.evidence_quoted %}
+                          &ldquo;{{ criterion.evidence_quoted }}&rdquo;
+                        {% else %}
+                          None quoted
+                        {% endif %}
+                      </p>
+                    </div>
+                  </details>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <p class="govuk-body">
+          <strong>Routing recommendation:</strong> {{ routingRecommendationText }}
+        </p>
+
+        <p class="govuk-body-s">Scored against rubric version {{ submission.result.scoring.rubric_version }}.</p>
+      {% endif %}
+
+      {% if jiraLink %}
+        <p class="govuk-body">
+          <a class="govuk-link" href="{{ jiraLink.url }}" target="_blank" rel="noopener noreferrer">
+            Create Jira ticket<span class="govuk-visually-hidden"> (opens in new tab)</span>
+          </a>
+        </p>
+        {% if jiraLink.truncated %}
+          <p class="govuk-body-s">The Jira description was shortened. This page is the full record.</p>
+        {% endif %}
+      {% endif %}
     {% endif %}
   </div>
 {% endblock %}
