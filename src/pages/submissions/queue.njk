@@ -24,6 +24,9 @@
             <th scope="col" class="govuk-table__header">Submission identifier</th>
             <th scope="col" class="govuk-table__header">Received date</th>
             <th scope="col" class="govuk-table__header">Preview</th>
+            <th scope="col" class="govuk-table__header">
+              <span class="govuk-visually-hidden">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody class="govuk-table__body">
@@ -42,6 +45,13 @@
               </td>
               <td class="govuk-table__cell">
                 {{ oneLinePreview | truncate(140, true, "") }}{% if oneLinePreview | length > 140 %}...{% endif %}
+              </td>
+              <td class="govuk-table__cell">
+                <form method="post" action="/submissions/{{ row.submissionId }}/score">
+                  <button type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" data-module="govuk-button">
+                    Triage<span class="govuk-visually-hidden"> submission {{ row.submissionId }}</span>
+                  </button>
+                </form>
               </td>
             </tr>
           {% endfor %}

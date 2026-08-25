@@ -21,7 +21,7 @@ const AUTH_FAIL_MESSAGE = 'Authentication failed. Please try again.'
  */
 async function getLogin (request, h) {
   if (request.auth.isAuthenticated) {
-    return h.redirect('/')
+    return h.redirect('/submissions')
   }
 
   return h.view('login/login.njk', {
@@ -44,18 +44,23 @@ async function getLogin (request, h) {
  * @returns {Promise<any>}
  */
 async function handleLoginCallback (request, h) {
-  const { profile, token, refreshToken } = config.get('auth.provider') === 'entra'
-    ? await _getEntraSession(request)
-    : _getDevSession()
+  const { profile, token, refreshToken } =
+    config.get('auth.provider') === 'entra'
+      ? await _getEntraSession(request)
+      : _getDevSession()
 
   const sessionId = uuidv4()
   const storedSessionId = `auth-session:${String(sessionId)}`
 
-  await request.server.app.cache.set(storedSessionId, { profile, token, refreshToken })
+  await request.server.app.cache.set(storedSessionId, {
+    profile,
+    token,
+    refreshToken
+  })
 
   request.cookieAuth.set({ sessionId })
 
-  return h.redirect('/')
+  return h.redirect('/submissions')
 }
 
 /**
@@ -92,9 +97,11 @@ async function logout (request, h) {
  */
 async function _getEntraSession (request) {
   if (!request.auth.isAuthenticated) {
-    logger.warn(buildErrorLog(request.auth.error, {
-      type: 'entra_bell_authentication_failed'
-    }))
+    logger.warn(
+      buildErrorLog(request.auth.error, {
+        type: 'entra_bell_authentication_failed'
+      })
+    )
 
     throw Boom.unauthorized(AUTH_FAIL_MESSAGE)
   }
@@ -104,9 +111,11 @@ async function _getEntraSession (request) {
   try {
     await request.server.verifyEntraToken(idToken)
   } catch (error) {
-    logger.warn(buildErrorLog(error, {
-      type: 'entra_token_verification_failed'
-    }))
+    logger.warn(
+      buildErrorLog(error, {
+        type: 'entra_token_verification_failed'
+      })
+    )
 
     throw Boom.unauthorized(AUTH_FAIL_MESSAGE)
   }
@@ -140,8 +149,4 @@ function _getDevSession () {
   }
 }
 
-export {
-  getLogin,
-  handleLoginCallback,
-  logout
-}
+export { getLogin, handleLoginCallback, logout }

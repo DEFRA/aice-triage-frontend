@@ -38,7 +38,7 @@ describe('#loginController', () => {
   })
 
   describe('When logged in as a dev user', () => {
-    test('Should respond with 302 and redirect to home page when visiting /login', async () => {
+    test('Should respond with 302 and redirect to the submissions queue when visiting /login', async () => {
       const cookie = await loginAsDevUser(server)
 
       const { headers, statusCode } = await server.inject({
@@ -48,19 +48,19 @@ describe('#loginController', () => {
       })
 
       expect(statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
-      expect(headers.location).toBe('/')
+      expect(headers.location).toBe('/submissions')
     })
   })
 
   describe('#handleLoginCallback', () => {
-    test('Should establish a dev-session and redirect to / when hitting the callback under the local provider', async () => {
+    test('Should establish a dev-session and redirect to /submissions when hitting the callback under the local provider', async () => {
       const callback = await server.inject({
         method: 'GET',
         url: '/login/callback'
       })
 
       expect(callback.statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
-      expect(callback.headers.location).toBe('/')
+      expect(callback.headers.location).toBe('/submissions')
 
       const cookie = (callback.headers['set-cookie'] ?? [])
         .map((c) => c.split(';')[0])

@@ -70,15 +70,15 @@ describe('#loginController', () => {
   })
 
   describe('#getLogin', () => {
-    test('redirects to / when already authenticated', async () => {
+    test('redirects to /submissions when already authenticated', async () => {
       const { getLogin } = await getController()
       const request = buildAuthenticatedRequest()
       const h = buildResponseToolkit()
 
       const result = await getLogin(request, h)
 
-      expect(h.redirect).toHaveBeenCalledWith('/')
-      expect(result).toEqual({ redirectedTo: '/' })
+      expect(h.redirect).toHaveBeenCalledWith('/submissions')
+      expect(result).toEqual({ redirectedTo: '/submissions' })
     })
 
     test('renders the login page when not authenticated', async () => {
@@ -141,7 +141,7 @@ describe('#loginController', () => {
       expect(request.server.app.cache.set).not.toHaveBeenCalled()
     })
 
-    test('stores the session and redirects home on success', async () => {
+    test('stores the session and redirects to submissions on success', async () => {
       const { handleLoginCallback } = await getController()
       const request = buildAuthenticatedRequest()
       const h = buildResponseToolkit()
@@ -166,7 +166,7 @@ describe('#loginController', () => {
 
       const sessionId = cacheKey.replace(/^auth-session:/, '')
       expect(request.cookieAuth.set).toHaveBeenCalledWith({ sessionId })
-      expect(result).toEqual({ redirectedTo: '/' })
+      expect(result).toEqual({ redirectedTo: '/submissions' })
     })
   })
 
@@ -180,7 +180,7 @@ describe('#loginController', () => {
       vi.unstubAllEnvs()
     })
 
-    test('mints a dev session without contacting Entra and redirects home', async () => {
+    test('mints a dev session without contacting Entra and redirects to submissions', async () => {
       const { handleLoginCallback } = await getController()
       const request = buildRequest()
       const h = buildResponseToolkit()
@@ -194,7 +194,7 @@ describe('#loginController', () => {
       expect(cacheKey).toMatch(/^auth-session:/)
       expect(storedSession.profile.displayName).toBe('Dev User')
       expect(typeof storedSession.token).toBe('string')
-      expect(result).toEqual({ redirectedTo: '/' })
+      expect(result).toEqual({ redirectedTo: '/submissions' })
     })
   })
 
