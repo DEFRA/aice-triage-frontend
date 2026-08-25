@@ -352,6 +352,18 @@ describe('#submissions pages', () => {
     )
   })
 
+  test('a network error or timeout scoring a single submission returns a 502', async () => {
+    submissionsApi.scoreSubmission.mockRejectedValue(
+      new Error('backend-unavailable')
+    )
+
+    const response = await postWithStubbedCredentials(
+      '/submissions/SUB-2026-0184/score'
+    )
+
+    expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_BAD_GATEWAY)
+  })
+
   test('triage triggered from the queue while already in-flight redirects to, and renders, the in-flight message', async () => {
     submissionsApi.scoreSubmission.mockResolvedValue({
       ok: false,

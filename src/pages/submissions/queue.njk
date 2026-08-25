@@ -18,9 +18,26 @@
     {% elif rows | length == 0 %}
       <p class="govuk-body">No submissions waiting</p>
     {% else %}
+      <form id="bulk-triage-form" method="post" action="/submissions/bulk-triage"></form>
+
       <table class="govuk-table">
         <thead class="govuk-table__head">
           <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">
+              <div class="govuk-checkboxes govuk-checkboxes--small">
+                <div class="govuk-checkboxes__item">
+                  <input
+                    class="govuk-checkboxes__input"
+                    type="checkbox"
+                    id="select-all-submissions"
+                    data-select-all="submissionIds"
+                  />
+                  <label class="govuk-label govuk-checkboxes__label" for="select-all-submissions">
+                    <span class="govuk-visually-hidden">Select all submissions</span>
+                  </label>
+                </div>
+              </div>
+            </th>
             <th scope="col" class="govuk-table__header">Submission identifier</th>
             <th scope="col" class="govuk-table__header">Received date</th>
             <th scope="col" class="govuk-table__header">Preview</th>
@@ -33,6 +50,23 @@
           {% for row in rows %}
             {% set oneLinePreview = (row.textPreviewSource or "") | replace("\n", " ") | trim %}
             <tr class="govuk-table__row">
+              <td class="govuk-table__cell">
+                <div class="govuk-checkboxes govuk-checkboxes--small">
+                  <div class="govuk-checkboxes__item">
+                    <input
+                      class="govuk-checkboxes__input"
+                      type="checkbox"
+                      id="select-{{ row.submissionId }}"
+                      name="submissionIds"
+                      value="{{ row.submissionId }}"
+                      form="bulk-triage-form"
+                    />
+                    <label class="govuk-label govuk-checkboxes__label" for="select-{{ row.submissionId }}">
+                      <span class="govuk-visually-hidden">Select submission {{ row.submissionId }}</span>
+                    </label>
+                  </div>
+                </div>
+              </td>
               <td class="govuk-table__cell">
                 <a class="govuk-link" href="/submissions/{{ row.submissionId }}">
                   {{ row.submissionId }}
@@ -57,6 +91,10 @@
           {% endfor %}
         </tbody>
       </table>
+
+      <button type="submit" form="bulk-triage-form" class="govuk-button govuk-!-margin-top-4" data-module="govuk-button">
+        Bulk triage submissions
+      </button>
     {% endif %}
   </div>
 {% endblock %}
