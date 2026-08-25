@@ -206,15 +206,17 @@ async function postBulkTriageSubmissions (request, h) {
     try {
       const result = await scoreSubmission(submissionId)
 
-      if (!result.ok && result.status === statusCodes.HTTP_STATUS_CONFLICT) {
-        results.push({ submissionId, outcome: 'in-flight' })
-      } else {
+      if (result.ok) {
         const kind = result.data?.kind
         results.push({
           submissionId,
           outcome: 'scored',
           kindLabel: KIND_SUMMARY_LABELS[kind] ?? null
         })
+      } else if (result.status === statusCodes.HTTP_STATUS_CONFLICT) {
+        results.push({ submissionId, outcome: 'in-flight' })
+      } else {
+        results.push({ submissionId, outcome: 'failed' })
       }
     } catch {
       results.push({ submissionId, outcome: 'failed' })

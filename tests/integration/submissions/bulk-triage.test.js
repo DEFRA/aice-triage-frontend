@@ -164,4 +164,20 @@ describe('#bulk triage submissions', () => {
     expect(headers.location).toBe('/submissions')
     expect(submissionsApi.scoreSubmission).not.toHaveBeenCalled()
   })
+
+  test('an unexpected non-ok, non-conflict result is shown as failed, not scored', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: false,
+      status: statusCodes.HTTP_STATUS_INTERNAL_SERVER_ERROR,
+      data: null
+    })
+
+    const { statusCode, payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('href="/submissions/SUB-2026-0184"')
+    expect(payload).toContain('Failed')
+    expect(payload).not.toContain('Scored')
+    expect(payload).not.toContain('Already in progress')
+  })
 })
