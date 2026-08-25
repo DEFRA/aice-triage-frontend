@@ -130,6 +130,29 @@ describe('#submissions pages', () => {
     expect(payload).toContain('href="/submissions/SUB-2026-0184"')
   })
 
+  test('queue: each row renders a Triage form posting to the score endpoint', async () => {
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0184',
+          receivedAt: '2026-07-31T09:52:46.854Z',
+          status: 'unprocessed',
+          submittedAt: null,
+          text: 'Preview text'
+        }
+      ]
+    })
+
+    const { payload } = await injectWithStubbedCredentials('/submissions')
+
+    expect(payload).toContain(
+      '<form method="post" action="/submissions/SUB-2026-0184/score">'
+    )
+    expect(payload).toContain('Triage')
+  })
+
   test('detail: known id renders full raw text', async () => {
     submissionsApi.getSubmissionById.mockResolvedValue({
       ok: true,
@@ -263,7 +286,56 @@ describe('#submissions pages', () => {
     expect(response.headers.location).toBe('/submissions/SUB-2026-0184')
   })
 
-  test('AC3: a 409 from the backend redirects with an in-flight flag, not an error', async () => {
+  test('triage triggered from the queue redirects to, and renders, the report', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        id: 'SUB-2026-0184',
+        kind: 'enquiry',
+        reason: 'Asks a question with no use case in it.',
+        scoring: null
+      }
+    })
+
+    const scoreResponse = await postWithStubbedCredentials(
+      '/submissions/SUB-2026-0184/score'
+    )
+
+    expect(scoreResponse.statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
+    expect(scoreResponse.headers.location).toBe('/submissions/SUB-2026-0184')
+
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'scored',
+        scoredAt: '2026-07-31T10:00:00.000Z',
+        text: 'We spend two days a week reading applications by hand',
+        result: {
+          id: 'SUB-2026-0184',
+          kind: 'enquiry',
+          reason: 'Asks a question with no use case in it.',
+          scoring: null
+        }
+      }
+    })
+
+    const reportResponse = await injectWithStubbedCredentials(
+      scoreResponse.headers.location
+    )
+
+    expect(reportResponse.statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(reportResponse.payload).toContain('This is an enquiry')
+    expect(reportResponse.payload).toContain(
+      'Asks a question with no use case in it.'
+    )
+    expect(reportResponse.payload).not.toContain('Score this submission')
+  })
+
+  test('a 409 from the backend redirects with an in-flight flag, not an error', async () => {
     submissionsApi.scoreSubmission.mockResolvedValue({
       ok: false,
       status: statusCodes.HTTP_STATUS_CONFLICT,
@@ -278,6 +350,44 @@ describe('#submissions pages', () => {
     expect(response.headers.location).toBe(
       '/submissions/SUB-2026-0184?scoring=in-flight'
     )
+  })
+
+  test('triage triggered from the queue while already in-flight redirects to, and renders, the in-flight message', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: false,
+      status: statusCodes.HTTP_STATUS_CONFLICT,
+      data: null
+    })
+
+    const scoreResponse = await postWithStubbedCredentials(
+      '/submissions/SUB-2026-0184/score'
+    )
+
+    expect(scoreResponse.statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
+    expect(scoreResponse.headers.location).toBe(
+      '/submissions/SUB-2026-0184?scoring=in-flight'
+    )
+
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        text: 'We spend two days a week reading applications by hand'
+      }
+    })
+
+    const reportResponse = await injectWithStubbedCredentials(
+      scoreResponse.headers.location
+    )
+
+    expect(reportResponse.statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(reportResponse.payload).toContain(
+      'Scoring is already running, refresh shortly'
+    )
+    expect(reportResponse.payload).not.toContain('Score this submission')
   })
 
   test('the in-flight flag renders a "refresh shortly" message, no button', async () => {
