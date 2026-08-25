@@ -53,6 +53,12 @@ const config = convict({
     default: null,
     env: 'TRIAGE_API_URL'
   },
+  triageApiTimeoutMs: {
+    doc: 'Timeout in milliseconds for requests to the triage backend API. Scoring requests can take longer than simple reads, so this needs to comfortably cover LLM-backed scoring calls.',
+    format: Number,
+    default: 15000,
+    env: 'TRIAGE_API_TIMEOUT_MS'
+  },
   jira: {
     baseUrl: {
       doc: 'Base URL for the Jira instance used to build create-issue links',

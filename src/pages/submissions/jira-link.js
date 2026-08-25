@@ -140,5 +140,6 @@ export {
   buildJiraDescription,
   buildJiraSummary,
   formatRoutingRecommendation,
-  getCriteriaRows
+  getCriteriaRows,
+  KIND_SUMMARY_LABELS
 }

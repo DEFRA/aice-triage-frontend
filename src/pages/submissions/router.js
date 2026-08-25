@@ -15,6 +15,11 @@ const routes = [
     method: 'POST',
     path: '/submissions/{submissionId}/score',
     handler: submissionsController.postScoreSubmission
+  },
+  {
+    method: 'POST',
+    path: '/submissions/bulk-triage',
+    handler: submissionsController.postBulkTriageSubmissions
   }
 ]
 

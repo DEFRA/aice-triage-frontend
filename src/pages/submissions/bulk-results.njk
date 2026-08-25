@@ -1,0 +1,45 @@
+{% extends "common/layout.njk" %}
+
+{% set pageTitle = "Bulk triage results" %}
+{% set page = "submissions" %}
+
+{% block content %}
+  <div class="govuk-width-container govuk-!-margin-top-6">
+    <h1 class="govuk-heading-l">Bulk triage results</h1>
+
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">Submission identifier</th>
+          <th scope="col" class="govuk-table__header">Outcome</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for result in results %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a class="govuk-link" href="/submissions/{{ result.submissionId }}">
+                {{ result.submissionId }}
+              </a>
+            </td>
+            <td class="govuk-table__cell">
+              {% if result.outcome == "scored" %}
+                <strong class="govuk-tag govuk-tag--green">
+                  Scored{% if result.kindLabel %} — {{ result.kindLabel }}{% endif %}
+                </strong>
+              {% elif result.outcome == "in-flight" %}
+                <strong class="govuk-tag govuk-tag--blue">Already in progress</strong>
+              {% else %}
+                <strong class="govuk-tag govuk-tag--red">Failed</strong>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="govuk-body">
+      <a class="govuk-link" href="/submissions">Back to submissions waiting</a>
+    </p>
+  </div>
+{% endblock %}

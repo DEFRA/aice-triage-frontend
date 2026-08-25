@@ -1,8 +1,6 @@
 import { config } from '../../config/config.js'
 import { statusCodes } from '../../constants/status-codes.js'
 
-const BACKEND_TIMEOUT_MS = 2000
-
 class SubmissionsApiError extends Error {
   constructor (message, statusCode) {
     super(message)
@@ -25,7 +23,7 @@ async function request (path, { method = 'GET', expected = [] } = {}) {
 
   const response = await fetch(url, {
     method,
-    signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS)
+    signal: AbortSignal.timeout(config.get('triageApiTimeoutMs'))
   })
 
   if (response.ok) {
