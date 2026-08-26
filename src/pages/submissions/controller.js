@@ -5,7 +5,8 @@ import { config } from '../../config/config.js'
 import {
   listUnprocessedSubmissions,
   getSubmissionById,
-  scoreSubmission
+  scoreSubmission,
+  SubmissionsApiTimeoutError
 } from './api.js'
 import {
   buildJiraLink,
@@ -163,7 +164,12 @@ async function postScoreSubmission (request, h) {
 
   try {
     result = await scoreSubmission(submissionId)
-  } catch {
+  } catch (error) {
+    if (error instanceof SubmissionsApiTimeoutError) {
+      throw Boom.badGateway(
+        'Scoring this submission is taking longer than expected. Please try again shortly.'
+      )
+    }
     throw Boom.badGateway()
   }
 
@@ -188,10 +194,12 @@ function normalizeSubmissionIds (value) {
  * Triages multiple submissions selected from the queue, one at a time,
  * against the existing single-submission scoring endpoint (AC2). A failure
  * or in-flight conflict for one submission does not stop the remaining
- * submissions from being triaged (AC4). The interim, sequential-looping
- * approach here is only suited to low volumes (2-3 submissions at a time);
- * see CAIT-259 (AC5) - if volumes increase significantly this should be
- * reassessed in favour of a backend bulk endpoint or async processing.
+ * submissions from being triaged (AC4). A request that times out is shown
+ * distinctly as 'timed-out' rather than a generic failure (CAIT-260 AC3).
+ * The interim, sequential-looping approach here is only suited to low
+ * volumes (2-3 submissions at a time); see CAIT-259 (AC5) - if volumes
+ * increase significantly this should be reassessed in favour of a backend
+ * bulk endpoint or async processing.
  */
 async function postBulkTriageSubmissions (request, h) {
   const submissionIds = normalizeSubmissionIds(request.payload?.submissionIds)
@@ -200,6 +208,7 @@ async function postBulkTriageSubmissions (request, h) {
     return h.redirect('/submissions')
   }
 
+  const jiraConfig = buildJiraConfig()
   const results = []
 
   for (const submissionId of submissionIds) {
@@ -208,18 +217,30 @@ async function postBulkTriageSubmissions (request, h) {
 
       if (result.ok) {
         const kind = result.data?.kind
+        const jiraLink = jiraConfig
+          ? buildJiraLink(result.data, {
+            ...jiraConfig,
+            detailUrl: `${request.server.info.uri}/submissions/${submissionId}`
+          })
+          : null
+
         results.push({
           submissionId,
           outcome: 'scored',
-          kindLabel: KIND_SUMMARY_LABELS[kind] ?? null
+          kindLabel: KIND_SUMMARY_LABELS[kind] ?? null,
+          jiraLink
         })
       } else if (result.status === statusCodes.HTTP_STATUS_CONFLICT) {
         results.push({ submissionId, outcome: 'in-flight' })
       } else {
         results.push({ submissionId, outcome: 'failed' })
       }
-    } catch {
-      results.push({ submissionId, outcome: 'failed' })
+    } catch (error) {
+      if (error instanceof SubmissionsApiTimeoutError) {
+        results.push({ submissionId, outcome: 'timed-out' })
+      } else {
+        results.push({ submissionId, outcome: 'failed' })
+      }
     }
   }
 

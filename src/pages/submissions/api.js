@@ -17,14 +17,36 @@ class SubmissionsApiError extends Error {
   }
 }
 
+class SubmissionsApiTimeoutError extends Error {
+  constructor (method, path, timeoutMs) {
+    super(
+      `Submissions API ${method} ${path} timed out after ${timeoutMs}ms`
+    )
+    this.name = 'SubmissionsApiTimeoutError'
+  }
+}
+
+function isTimeoutError (error) {
+  return error.name === 'TimeoutError'
+}
+
 async function request (path, { method = 'GET', expected = [] } = {}) {
   const baseUrl = config.get('triageApiUrl')
   const url = new URL(path, baseUrl).toString()
+  const timeoutMs = config.get('triageApiTimeoutMs')
 
-  const response = await fetch(url, {
-    method,
-    signal: AbortSignal.timeout(config.get('triageApiTimeoutMs'))
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      method,
+      signal: AbortSignal.timeout(timeoutMs)
+    })
+  } catch (error) {
+    if (isTimeoutError(error)) {
+      throw new SubmissionsApiTimeoutError(method, path, timeoutMs)
+    }
+    throw error
+  }
 
   if (response.ok) {
     return { ok: true, status: response.status, data: await response.json() }
@@ -58,5 +80,6 @@ export {
   listUnprocessedSubmissions,
   getSubmissionById,
   scoreSubmission,
-  SubmissionsApiError
+  SubmissionsApiError,
+  SubmissionsApiTimeoutError
 }

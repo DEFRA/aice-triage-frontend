@@ -4,7 +4,8 @@ import { config } from '../../../src/config/config.js'
 import {
   listUnprocessedSubmissions,
   getSubmissionById,
-  scoreSubmission
+  scoreSubmission,
+  SubmissionsApiTimeoutError
 } from '../../../src/pages/submissions/api.js'
 
 const baseUrl = config.get('triageApiUrl')
@@ -141,6 +142,24 @@ describe('#submissions api', () => {
         .replyWithError('network down')
 
       await expect(scoreSubmission('SUB-2026-0184')).rejects.toThrow()
+    })
+
+    test('Should throw a distinguishable timeout error when the request exceeds the configured timeout', async () => {
+      const getConfig = config.get.bind(config)
+      vi.spyOn(config, 'get').mockImplementation((key) =>
+        key === 'triageApiTimeoutMs' ? 20 : getConfig(key)
+      )
+
+      nock(baseUrl)
+        .post('/submissions/SUB-2026-0184/score')
+        .delay(200)
+        .reply(200, {})
+
+      await expect(scoreSubmission('SUB-2026-0184')).rejects.toThrow(
+        SubmissionsApiTimeoutError
+      )
+
+      vi.restoreAllMocks()
     })
   })
 })
