@@ -7,7 +7,8 @@ import { loginAsDevUser } from '../helpers/login.js'
 vi.mock('../../../src/pages/submissions/api.js', () => ({
   listUnprocessedSubmissions: vi.fn(),
   getSubmissionById: vi.fn(),
-  scoreSubmission: vi.fn()
+  scoreSubmission: vi.fn(),
+  SubmissionsApiTimeoutError: class SubmissionsApiTimeoutError extends Error {}
 }))
 
 describe('#bulk triage submissions', () => {
@@ -73,7 +74,7 @@ describe('#bulk triage submissions', () => {
     expect(payload).toContain('Bulk triage submissions')
   })
 
-  test('AC2/AC3: triages each selected submission sequentially and shows outcomes', async () => {
+  test('triages each selected submission sequentially and shows outcomes', async () => {
     submissionsApi.scoreSubmission.mockImplementation((submissionId) => {
       if (submissionId === 'SUB-2026-0001') {
         return Promise.resolve({
@@ -124,7 +125,7 @@ describe('#bulk triage submissions', () => {
     expect(payload).toContain('Failed')
   })
 
-  test('AC4: a failure or in-flight conflict does not stop remaining submissions from being triaged', async () => {
+  test('a failure or in-flight conflict does not stop remaining submissions from being triaged', async () => {
     submissionsApi.scoreSubmission.mockImplementation((submissionId) => {
       if (submissionId === 'SUB-2026-0002') {
         return Promise.reject(new Error('backend-unavailable'))
@@ -157,6 +158,40 @@ describe('#bulk triage submissions', () => {
     expect(payload).toContain('enquiry')
   })
 
+  test('a scored submission includes a Jira create-issue link for that row', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        id: 'SUB-2026-0184',
+        kind: 'enquiry',
+        reason: 'Asks a question with no use case in it.',
+        scoring: null
+      }
+    })
+
+    const { statusCode, payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('Create Jira ticket')
+    expect(payload).toContain('https://defra.atlassian.net/secure/CreateIssueDetails')
+    expect(payload).toContain('pid=10042')
+    expect(payload).toContain('issuetype=10005')
+  })
+
+  test('a non-scored outcome does not include a Jira create-issue link', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: false,
+      status: statusCodes.HTTP_STATUS_CONFLICT,
+      data: null
+    })
+
+    const { statusCode, payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).not.toContain('Create Jira ticket')
+  })
+
   test('no submissions selected redirects back to the queue without calling the API', async () => {
     const { statusCode, headers } = await postBulkTriage([])
 
@@ -179,5 +214,17 @@ describe('#bulk triage submissions', () => {
     expect(payload).toContain('Failed')
     expect(payload).not.toContain('Scored')
     expect(payload).not.toContain('Already in progress')
+  })
+
+  test('a submission that times out is shown distinctly as timed-out, not a generic failure', async () => {
+    submissionsApi.scoreSubmission.mockRejectedValue(
+      new submissionsApi.SubmissionsApiTimeoutError()
+    )
+
+    const { statusCode, payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('href="/submissions/SUB-2026-0184"')
+    expect(payload).toContain('Timed out')
   })
 })

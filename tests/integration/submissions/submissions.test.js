@@ -7,7 +7,8 @@ import { loginAsDevUser } from '../helpers/login.js'
 vi.mock('../../../src/pages/submissions/api.js', () => ({
   listUnprocessedSubmissions: vi.fn(),
   getSubmissionById: vi.fn(),
-  scoreSubmission: vi.fn()
+  scoreSubmission: vi.fn(),
+  SubmissionsApiTimeoutError: class SubmissionsApiTimeoutError extends Error {}
 }))
 
 describe('#submissions pages', () => {
@@ -362,6 +363,19 @@ describe('#submissions pages', () => {
     )
 
     expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_BAD_GATEWAY)
+  })
+
+  test('a scoring request that times out shows a clear message, not a silent failure', async () => {
+    submissionsApi.scoreSubmission.mockRejectedValue(
+      new submissionsApi.SubmissionsApiTimeoutError()
+    )
+
+    const response = await postWithStubbedCredentials(
+      '/submissions/SUB-2026-0184/score'
+    )
+
+    expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_BAD_GATEWAY)
+    expect(response.payload).toContain('taking longer than expected')
   })
 
   test('triage triggered from the queue while already in-flight redirects to, and renders, the in-flight message', async () => {
