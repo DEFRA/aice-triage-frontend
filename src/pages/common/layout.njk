@@ -41,6 +41,11 @@
         <li class="defra-service-navigation__item">
           <a class="defra-service-navigation__link" href="/" {% if page == 'home' %}aria-current="page"{% endif %}>Home</a>
         </li>
+        {% if isAuthenticated %}
+          <li class="defra-service-navigation__item">
+            <a class="defra-service-navigation__link" href="/submissions" {% if page == 'submissions' %}aria-current="page"{% endif %}>Submissions</a>
+          </li>
+        {% endif %}
       </ul>
     </div>
   </nav>
@@ -52,9 +57,7 @@
 
 {% block beforeContent %}
   {% if breadcrumbs %}
-    <div class="govuk-width-container govuk-!-margin-bottom-3">
-      {{ govukBreadcrumbs({ items: breadcrumbs }) }}
-    </div>
+    {{ govukBreadcrumbs({ items: breadcrumbs, classes: "govuk-!-margin-bottom-3" }) }}
   {% endif %}
 {% endblock %}
 

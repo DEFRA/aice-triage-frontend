@@ -27,6 +27,33 @@ describe('#homepageController', () => {
 
       expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     })
+
+    test('Should render a call to action linking to the submissions queue', async () => {
+      const cookie = await loginAsDevUser(server)
+
+      const { payload } = await server.inject({
+        method: 'GET',
+        url: '/',
+        headers: { cookie }
+      })
+
+      expect(payload).toContain('href="/submissions"')
+      expect(payload).toContain('View submissions waiting')
+    })
+
+    test('Should render a Submissions link in the service navigation', async () => {
+      const cookie = await loginAsDevUser(server)
+
+      const { payload } = await server.inject({
+        method: 'GET',
+        url: '/',
+        headers: { cookie }
+      })
+
+      expect(payload).toContain(
+        '<a class="defra-service-navigation__link" href="/submissions"'
+      )
+    })
   })
 
   describe('When not logged in', () => {

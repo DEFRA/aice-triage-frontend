@@ -152,6 +152,7 @@ describe('#submissions pages', () => {
       '<form method="post" action="/submissions/SUB-2026-0184/score">'
     )
     expect(payload).toContain('Triage')
+    expect(payload).toContain('data-prevent-double-click="true"')
   })
 
   test('detail: known id renders full raw text', async () => {
@@ -267,6 +268,47 @@ describe('#submissions pages', () => {
     expect(payload).not.toContain('AI opportunity')
   })
 
+  test('the Score this submission button has data-prevent-double-click enabled', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        text: 'We spend two days a week reading applications by hand'
+      }
+    })
+
+    const { payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(payload).toContain('data-prevent-double-click="true"')
+  })
+
+  test('the detail page renders breadcrumbs back to home and the submissions queue', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        text: 'We spend two days a week reading applications by hand'
+      }
+    })
+
+    const { payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184'
+    )
+
+    expect(payload).toContain('govuk-breadcrumbs')
+    expect(payload).toContain('href="/"')
+    expect(payload).toContain('href="/submissions"')
+    expect(payload).toContain('SUB-2026-0184')
+  })
+
   test('pressing the button triggers scoring and redirects to the detail page', async () => {
     submissionsApi.scoreSubmission.mockResolvedValue({
       ok: true,
@@ -365,7 +407,7 @@ describe('#submissions pages', () => {
     expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_BAD_GATEWAY)
   })
 
-  test('a scoring request that times out shows a clear message, not a silent failure', async () => {
+  test('a scoring request that times out redirects with a timed-out flag, not a silent failure', async () => {
     submissionsApi.scoreSubmission.mockRejectedValue(
       new submissionsApi.SubmissionsApiTimeoutError()
     )
@@ -374,8 +416,10 @@ describe('#submissions pages', () => {
       '/submissions/SUB-2026-0184/score'
     )
 
-    expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_BAD_GATEWAY)
-    expect(response.payload).toContain('taking longer than expected')
+    expect(response.statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
+    expect(response.headers.location).toBe(
+      '/submissions/SUB-2026-0184?scoring=timed-out'
+    )
   })
 
   test('triage triggered from the queue while already in-flight redirects to, and renders, the in-flight message', async () => {
@@ -435,6 +479,27 @@ describe('#submissions pages', () => {
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('Scoring is already running, refresh shortly')
     expect(payload).not.toContain('Score this submission')
+  })
+
+  test('the timed-out flag renders a clear message and still offers a retry button', async () => {
+    submissionsApi.getSubmissionById.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: {
+        submissionId: 'SUB-2026-0184',
+        receivedAt: '2026-07-31T09:52:46.854Z',
+        status: 'unprocessed',
+        text: 'We spend two days a week reading applications by hand'
+      }
+    })
+
+    const { statusCode, payload } = await injectWithStubbedCredentials(
+      '/submissions/SUB-2026-0184?scoring=timed-out'
+    )
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('taking longer than expected')
+    expect(payload).toContain('Score this submission')
   })
 
   test('revisiting a scored submission shows the stored result, no button', async () => {

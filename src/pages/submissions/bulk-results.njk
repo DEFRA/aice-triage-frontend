@@ -2,17 +2,26 @@
 
 {% set pageTitle = "Bulk triage results" %}
 {% set page = "submissions" %}
+{% set breadcrumbs = [
+  { text: "Home", href: "/" },
+  { text: "Submissions waiting", href: "/submissions" },
+  { text: "Bulk triage results" }
+] %}
 
 {% block content %}
-  <div class="govuk-width-container govuk-!-margin-top-6">
+  <div class="govuk-!-margin-top-6">
     <h1 class="govuk-heading-l">Bulk triage results</h1>
 
     <table class="govuk-table">
+      <caption class="govuk-table__caption govuk-visually-hidden">Bulk triage results</caption>
       <thead class="govuk-table__head">
         <tr class="govuk-table__row">
           <th scope="col" class="govuk-table__header">Submission identifier</th>
           <th scope="col" class="govuk-table__header">Outcome</th>
           <th scope="col" class="govuk-table__header">Jira ticket</th>
+          <th scope="col" class="govuk-table__header">
+            <span class="govuk-visually-hidden">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody class="govuk-table__body">
@@ -26,12 +35,12 @@
             <td class="govuk-table__cell">
               {% if result.outcome == "scored" %}
                 <strong class="govuk-tag govuk-tag--green">
-                  Scored{% if result.kindLabel %} — {{ result.kindLabel }}{% endif %}
+                  Scored{% if result.kindLabel %}, {{ result.kindLabel }}{% endif %}
                 </strong>
               {% elif result.outcome == "in-flight" %}
                 <strong class="govuk-tag govuk-tag--blue">Already in progress</strong>
               {% elif result.outcome == "timed-out" %}
-                <strong class="govuk-tag govuk-tag--orange">Timed out — try again</strong>
+                <strong class="govuk-tag govuk-tag--orange">Timed out, try again</strong>
               {% else %}
                 <strong class="govuk-tag govuk-tag--red">Failed</strong>
               {% endif %}
@@ -42,17 +51,22 @@
                   Create Jira ticket<span class="govuk-visually-hidden"> for {{ result.submissionId }} (opens in new tab)</span>
                 </a>
                 {% if result.jiraLink.truncated %}
-                  <p class="govuk-body-s">Description shortened — see full record.</p>
+                  <p class="govuk-body-s">Description shortened, see full record.</p>
                 {% endif %}
+              {% endif %}
+            </td>
+            <td class="govuk-table__cell">
+              {% if result.outcome == "timed-out" %}
+                <form method="post" action="/submissions/{{ result.submissionId }}/score">
+                  <button type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" data-module="govuk-button" data-prevent-double-click="true">
+                    Retry<span class="govuk-visually-hidden"> triaging {{ result.submissionId }}</span>
+                  </button>
+                </form>
               {% endif %}
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
-
-    <p class="govuk-body">
-      <a class="govuk-link" href="/submissions">Back to submissions waiting</a>
-    </p>
   </div>
 {% endblock %}

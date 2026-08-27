@@ -1,10 +1,23 @@
 {% extends "common/layout.njk" %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% set pageTitle = "Submissions waiting" %}
 {% set page = "submissions" %}
 
 {% block content %}
-  <div class="govuk-width-container govuk-!-margin-top-6">
+  <div class="govuk-!-margin-top-6">
+    {% if noSelectionError %}
+      {{ govukErrorSummary({
+        titleText: "There is a problem",
+        errorList: [
+          {
+            text: "Select at least one submission to triage",
+            href: "#select-all-submissions"
+          }
+        ]
+      }) }}
+    {% endif %}
+
     <h1 class="govuk-heading-l">Submissions waiting</h1>
 
     {% if serviceUnavailable %}
@@ -21,6 +34,7 @@
       <form id="bulk-triage-form" method="post" action="/submissions/bulk-triage"></form>
 
       <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-visually-hidden">Submissions waiting to be triaged</caption>
         <thead class="govuk-table__head">
           <tr class="govuk-table__row">
             <th scope="col" class="govuk-table__header">
@@ -82,7 +96,7 @@
               </td>
               <td class="govuk-table__cell">
                 <form method="post" action="/submissions/{{ row.submissionId }}/score">
-                  <button type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" data-module="govuk-button">
+                  <button type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" data-module="govuk-button" data-prevent-double-click="true">
                     Triage<span class="govuk-visually-hidden"> submission {{ row.submissionId }}</span>
                   </button>
                 </form>
@@ -92,7 +106,7 @@
         </tbody>
       </table>
 
-      <button type="submit" form="bulk-triage-form" class="govuk-button govuk-!-margin-top-4" data-module="govuk-button">
+      <button type="submit" form="bulk-triage-form" class="govuk-button govuk-!-margin-top-4" data-module="govuk-button" data-prevent-double-click="true">
         Bulk triage submissions
       </button>
     {% endif %}
