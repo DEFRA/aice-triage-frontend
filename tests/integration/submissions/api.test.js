@@ -3,6 +3,7 @@ import nock from 'nock'
 import { config } from '../../../src/config/config.js'
 import {
   listUnprocessedSubmissions,
+  listScoredSubmissions,
   getSubmissionById,
   scoreSubmission,
   SubmissionsApiTimeoutError
@@ -49,6 +50,47 @@ describe('#submissions api', () => {
         .replyWithError('network down')
 
       await expect(listUnprocessedSubmissions()).rejects.toThrow()
+    })
+  })
+
+  describe('#listScoredSubmissions', () => {
+    test('Should return submissions when the backend responds successfully', async () => {
+      const submissions = [
+        {
+          submissionId: 'SUB-1',
+          scoredAt: '2026-07-31T09:00:00.000Z',
+          result: { kind: 'opportunity' }
+        }
+      ]
+
+      nock(baseUrl)
+        .get('/submissions')
+        .query({ status: 'scored' })
+        .reply(200, submissions)
+
+      const result = await listScoredSubmissions()
+
+      expect(result).toEqual({ ok: true, status: 200, data: submissions })
+    })
+
+    test('Should throw when the backend responds with an error status', async () => {
+      nock(baseUrl)
+        .get('/submissions')
+        .query({ status: 'scored' })
+        .reply(500)
+
+      await expect(listScoredSubmissions()).rejects.toMatchObject({
+        statusCode: 500
+      })
+    })
+
+    test('Should throw when the request fails', async () => {
+      nock(baseUrl)
+        .get('/submissions')
+        .query({ status: 'scored' })
+        .replyWithError('network down')
+
+      await expect(listScoredSubmissions()).rejects.toThrow()
     })
   })
 

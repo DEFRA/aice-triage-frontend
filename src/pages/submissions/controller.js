@@ -102,7 +102,7 @@ async function getSubmissionsQueue (request, h) {
     .code(statusCodes.HTTP_STATUS_OK)
 }
 
-async function getScoredSubmissions (request, h) {
+async function getScoredSubmissions (_request, h) {
   let result
 
   try {

@@ -89,6 +89,28 @@ describe('#scored submissions page', () => {
     expect(payload).not.toContain('Submission identifier')
   })
 
+  test('a row with no recognised classification kind falls back to "Unknown"', async () => {
+    submissionsApi.listScoredSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0500',
+          scoredAt: '2026-07-31T09:00:00.000Z',
+          status: 'scored',
+          result: null
+        }
+      ]
+    })
+
+    const { statusCode, payload } =
+      await injectWithStubbedCredentials('/submissions/scored')
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('SUB-2026-0500')
+    expect(payload).toContain('Unknown')
+  })
+
   test('each row links to the detail page', async () => {
     submissionsApi.listScoredSubmissions.mockResolvedValue({
       ok: true,
