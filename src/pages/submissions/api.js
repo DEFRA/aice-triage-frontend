@@ -63,6 +63,10 @@ async function listUnprocessedSubmissions () {
   return request('/submissions?status=unprocessed')
 }
 
+async function listScoredSubmissions () {
+  return request('/submissions?status=scored')
+}
+
 async function getSubmissionById (submissionId) {
   return request(`/submissions/${submissionId}`, {
     expected: [statusCodes.HTTP_STATUS_NOT_FOUND]
@@ -78,6 +82,7 @@ async function scoreSubmission (submissionId) {
 
 export {
   listUnprocessedSubmissions,
+  listScoredSubmissions,
   getSubmissionById,
   scoreSubmission,
   SubmissionsApiError,

@@ -8,6 +8,11 @@ const routes = [
   },
   {
     method: 'GET',
+    path: '/submissions/scored',
+    handler: submissionsController.getScoredSubmissions
+  },
+  {
+    method: 'GET',
     path: '/submissions/{submissionId}',
     handler: submissionsController.getSubmissionDetail
   },

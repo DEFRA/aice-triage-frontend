@@ -4,6 +4,7 @@ import { statusCodes } from '../../constants/status-codes.js'
 import { config } from '../../config/config.js'
 import {
   listUnprocessedSubmissions,
+  listScoredSubmissions,
   getSubmissionById,
   scoreSubmission,
   SubmissionsApiTimeoutError
@@ -42,6 +43,26 @@ function mapQueueRows (submissions) {
     }))
 }
 
+const MAX_SCORED_ROWS = 50
+
+// This bound is applied to the RENDERED page, not the backend fetch: it
+// slices after listScoredSubmissions() has already returned the full
+// status=scored result set, sorted here rather than by the backend, so it
+// protects the reader from an unreadable page but not the network/response
+// size as the Dev queue's scored volume grows. Bounding the fetch itself
+// would mean the backend list route needs a limit/pagination param.
+function mapScoredRows (submissions) {
+  return [...submissions]
+    .sort((a, b) => new Date(b.scoredAt) - new Date(a.scoredAt))
+    .slice(0, MAX_SCORED_ROWS)
+    .map((submission) => ({
+      submissionId: submission.submissionId,
+      scoredAtIso: submission.scoredAt,
+      scoredAtDisplay: formatGovUkDate(submission.scoredAt),
+      kindLabel: KIND_SUMMARY_LABELS[submission.result?.kind] ?? null
+    }))
+}
+
 function buildJiraConfig () {
   const baseUrl = config.get('jira.baseUrl')
   const projectId = config.get('jira.projectId')
@@ -77,6 +98,32 @@ async function getSubmissionsQueue (request, h) {
       rows: mapQueueRows(result.data),
       serviceUnavailable: false,
       noSelectionError: request.query.error === 'select-a-submission'
+    })
+    .code(statusCodes.HTTP_STATUS_OK)
+}
+
+async function getScoredSubmissions (_request, h) {
+  let result
+
+  try {
+    result = await listScoredSubmissions()
+  } catch {
+    return h
+      .view('submissions/scored.njk', {
+        pageTitle: 'Scored submissions',
+        page: 'submissions',
+        rows: [],
+        serviceUnavailable: true
+      })
+      .code(statusCodes.HTTP_STATUS_OK)
+  }
+
+  return h
+    .view('submissions/scored.njk', {
+      pageTitle: 'Scored submissions',
+      page: 'submissions',
+      rows: mapScoredRows(result.data),
+      serviceUnavailable: false
     })
     .code(statusCodes.HTTP_STATUS_OK)
 }
@@ -256,6 +303,7 @@ async function postBulkTriageSubmissions (request, h) {
 
 export {
   getSubmissionsQueue,
+  getScoredSubmissions,
   getSubmissionDetail,
   postScoreSubmission,
   postBulkTriageSubmissions
