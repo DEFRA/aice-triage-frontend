@@ -1,0 +1,57 @@
+{% extends "common/layout.njk" %}
+
+{% set pageTitle = "Scored submissions" %}
+{% set page = "submissions" %}
+{% set breadcrumbs = [
+  { text: "Home", href: "/" },
+  { text: "Submissions waiting", href: "/submissions" },
+  { text: "Scored submissions" }
+] %}
+
+{% block content %}
+  <div class="govuk-!-margin-top-6">
+    <h1 class="govuk-heading-l">Scored submissions</h1>
+
+    {% if serviceUnavailable %}
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-visually-hidden">Warning</span>
+          the triage service is unavailable
+        </strong>
+      </div>
+    {% elif rows | length == 0 %}
+      <p class="govuk-body">No submissions have been scored yet</p>
+    {% else %}
+      <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-visually-hidden">Submissions that have been scored, most recently scored first</caption>
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">Submission identifier</th>
+            <th scope="col" class="govuk-table__header">Scored date</th>
+            <th scope="col" class="govuk-table__header">Classification</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for row in rows %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">
+                <a class="govuk-link" href="/submissions/{{ row.submissionId }}">
+                  {{ row.submissionId }}
+                </a>
+              </td>
+              <td class="govuk-table__cell">
+                <time datetime="{{ row.scoredAtIso }}" title="{{ row.scoredAtIso }}">
+                  {{ row.scoredAtDisplay }}
+                </time>
+              </td>
+              <td class="govuk-table__cell">
+                {{ row.kindLabel or "Unknown" }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+{% endblock %}
