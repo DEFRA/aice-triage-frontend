@@ -1,0 +1,17 @@
+@use 'sass:color';
+@use '../variables/colours' as *;
+
+// govuk-frontend's default button colour is GOV.UK green (#00703c). Override
+// it here so buttons match the DEFRA green used in the top navigation
+// (defra-header, defra-navigation, defra-service-navigation).
+$defra-button-hover-colour: color.scale($defra-green, $lightness: -25%);
+$defra-button-shadow-colour: color.scale($defra-green, $lightness: -50%);
+
+.govuk-button:not(.govuk-button--secondary):not(.govuk-button--warning):not(.govuk-button--inverse) {
+  background-color: $defra-green;
+  box-shadow: 0 2px 0 $defra-button-shadow-colour;
+
+  &:hover:not([disabled]) {
+    background-color: $defra-button-hover-colour;
+  }
+}
