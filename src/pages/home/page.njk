@@ -4,6 +4,17 @@
 {% set page = 'home' %}
 
 {% block content %}
-  <div class="govuk-width-container govuk-!-margin-top-6">
+  <div class="govuk-grid-row govuk-!-margin-top-6">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ serviceName }}</h1>
+
+      <p class="govuk-body">
+        Triage submissions to identify AI opportunities, enquiries and access requests.
+      </p>
+
+      <a href="/submissions" class="govuk-button" data-module="govuk-button">
+        View submissions waiting
+      </a>
+    </div>
   </div>
 {% endblock %}

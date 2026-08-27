@@ -72,6 +72,59 @@ describe('#bulk triage submissions', () => {
     expect(payload).toContain('value="SUB-2026-0184"')
     expect(payload).toContain('form="bulk-triage-form"')
     expect(payload).toContain('Bulk triage submissions')
+    expect(payload).toContain('data-prevent-double-click="true"')
+  })
+
+  test('queue: shows an error summary when redirected after selecting no submissions', async () => {
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0184',
+          receivedAt: '2026-07-31T09:52:46.854Z',
+          status: 'unprocessed',
+          submittedAt: null,
+          text: 'Preview text'
+        }
+      ]
+    })
+
+    const cookie = await loginAsDevUser(server)
+    const { statusCode, payload } = await server.inject({
+      method: 'GET',
+      url: '/submissions?error=select-a-submission',
+      headers: { cookie }
+    })
+
+    expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
+    expect(payload).toContain('There is a problem')
+    expect(payload).toContain('Select at least one submission to triage')
+  })
+
+  test('queue: does not show an error summary without the selection error flag', async () => {
+    submissionsApi.listUnprocessedSubmissions.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: [
+        {
+          submissionId: 'SUB-2026-0184',
+          receivedAt: '2026-07-31T09:52:46.854Z',
+          status: 'unprocessed',
+          submittedAt: null,
+          text: 'Preview text'
+        }
+      ]
+    })
+
+    const cookie = await loginAsDevUser(server)
+    const { payload } = await server.inject({
+      method: 'GET',
+      url: '/submissions',
+      headers: { cookie }
+    })
+
+    expect(payload).not.toContain('There is a problem')
   })
 
   test('triages each selected submission sequentially and shows outcomes', async () => {
@@ -192,11 +245,11 @@ describe('#bulk triage submissions', () => {
     expect(payload).not.toContain('Create Jira ticket')
   })
 
-  test('no submissions selected redirects back to the queue without calling the API', async () => {
+  test('no submissions selected redirects back to the queue with a selection error, without calling the API', async () => {
     const { statusCode, headers } = await postBulkTriage([])
 
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_FOUND)
-    expect(headers.location).toBe('/submissions')
+    expect(headers.location).toBe('/submissions?error=select-a-submission')
     expect(submissionsApi.scoreSubmission).not.toHaveBeenCalled()
   })
 
@@ -226,5 +279,45 @@ describe('#bulk triage submissions', () => {
     expect(statusCode).toBe(statusCodes.HTTP_STATUS_OK)
     expect(payload).toContain('href="/submissions/SUB-2026-0184"')
     expect(payload).toContain('Timed out')
+  })
+
+  test('a timed-out row includes a retry action that posts back to the score endpoint', async () => {
+    submissionsApi.scoreSubmission.mockRejectedValue(
+      new submissionsApi.SubmissionsApiTimeoutError()
+    )
+
+    const { payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(payload).toContain(
+      '<form method="post" action="/submissions/SUB-2026-0184/score">'
+    )
+    expect(payload).toContain('Retry')
+  })
+
+  test('a scored row does not include a retry action', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: { id: 'SUB-2026-0184', kind: 'enquiry', reason: 'ok', scoring: null }
+    })
+
+    const { payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(payload).not.toContain('Retry')
+  })
+
+  test('bulk results: renders breadcrumbs back to home and the submissions queue', async () => {
+    submissionsApi.scoreSubmission.mockResolvedValue({
+      ok: true,
+      status: statusCodes.HTTP_STATUS_OK,
+      data: { id: 'SUB-2026-0184', kind: 'enquiry', reason: 'ok', scoring: null }
+    })
+
+    const { payload } = await postBulkTriage(['SUB-2026-0184'])
+
+    expect(payload).toContain('govuk-breadcrumbs')
+    expect(payload).toContain('href="/"')
+    expect(payload).toContain('href="/submissions"')
+    expect(payload).toContain('Bulk triage results')
   })
 })

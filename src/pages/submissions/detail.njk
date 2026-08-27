@@ -1,9 +1,14 @@
 {% extends "common/layout.njk" %}
 
 {% set page = "submissions" %}
+{% set breadcrumbs = [
+  { text: "Home", href: "/" },
+  { text: "Submissions waiting", href: "/submissions" },
+  { text: submission.submissionId if submission else submissionId }
+] %}
 
 {% block content %}
-  <div class="govuk-width-container govuk-!-margin-top-6">
+  <div class="govuk-!-margin-top-6">
     {% if serviceUnavailable %}
       <h1 class="govuk-heading-l">Submission {{ submissionId }}</h1>
       <div class="govuk-warning-text">
@@ -37,8 +42,17 @@
             </strong>
           </div>
         {% else %}
+          {% if scoringTimedOut %}
+            <div class="govuk-warning-text">
+              <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+              <strong class="govuk-warning-text__text">
+                <span class="govuk-visually-hidden">Warning</span>
+                Scoring this submission is taking longer than expected. Please try again shortly.
+              </strong>
+            </div>
+          {% endif %}
           <form method="post" action="/submissions/{{ submission.submissionId }}/score">
-            <button type="submit" class="govuk-button" data-module="govuk-button">
+            <button type="submit" class="govuk-button" data-module="govuk-button" data-prevent-double-click="true">
               Score this submission
             </button>
           </form>
@@ -76,6 +90,7 @@
         {% endif %}
 
         <table class="govuk-table">
+          <caption class="govuk-table__caption govuk-visually-hidden">Scoring criteria for this submission</caption>
           <thead class="govuk-table__head">
             <tr class="govuk-table__row">
               <th scope="col" class="govuk-table__header">Criterion</th>
@@ -135,10 +150,6 @@
           <p class="govuk-body-s">The Jira description was shortened. This page is the full record.</p>
         {% endif %}
       {% endif %}
-
-      <p class="govuk-body">
-        <a class="govuk-link" href="/submissions">Back to submissions waiting</a>
-      </p>
     {% endif %}
   </div>
 {% endblock %}

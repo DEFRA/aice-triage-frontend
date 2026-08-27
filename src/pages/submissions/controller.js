@@ -54,7 +54,7 @@ function buildJiraConfig () {
   return { baseUrl, projectId, issueTypeId }
 }
 
-async function getSubmissionsQueue (_request, h) {
+async function getSubmissionsQueue (request, h) {
   let result
 
   try {
@@ -75,7 +75,8 @@ async function getSubmissionsQueue (_request, h) {
       pageTitle: 'Submissions waiting',
       page: 'submissions',
       rows: mapQueueRows(result.data),
-      serviceUnavailable: false
+      serviceUnavailable: false,
+      noSelectionError: request.query.error === 'select-a-submission'
     })
     .code(statusCodes.HTTP_STATUS_OK)
 }
@@ -83,6 +84,7 @@ async function getSubmissionsQueue (_request, h) {
 async function getSubmissionDetail (request, h) {
   const { submissionId } = request.params
   const scoringInFlight = request.query.scoring === 'in-flight'
+  const scoringTimedOut = request.query.scoring === 'timed-out'
   let result
 
   try {
@@ -139,6 +141,7 @@ async function getSubmissionDetail (request, h) {
       page: 'submissions',
       serviceUnavailable: false,
       scoringInFlight,
+      scoringTimedOut,
       submission: {
         submissionId: submission.submissionId,
         receivedAtIso: submission.receivedAt,
@@ -166,9 +169,7 @@ async function postScoreSubmission (request, h) {
     result = await scoreSubmission(submissionId)
   } catch (error) {
     if (error instanceof SubmissionsApiTimeoutError) {
-      throw Boom.badGateway(
-        'Scoring this submission is taking longer than expected. Please try again shortly.'
-      )
+      return h.redirect(`/submissions/${submissionId}?scoring=timed-out`)
     }
     throw Boom.badGateway()
   }
@@ -205,7 +206,7 @@ async function postBulkTriageSubmissions (request, h) {
   const submissionIds = normalizeSubmissionIds(request.payload?.submissionIds)
 
   if (submissionIds.length === 0) {
-    return h.redirect('/submissions')
+    return h.redirect('/submissions?error=select-a-submission')
   }
 
   const jiraConfig = buildJiraConfig()
